@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { justjoinScraper } from './justjoin';
 import { nofluffjobsScraper } from './nofluffjobs';
 import { bulldogjobScraper } from './bulldogjob';
+import { olxScraper } from './olx';
 
 const scrapers: Scraper[] = [];
 
@@ -13,6 +14,7 @@ export function registerScraper(scraper: Scraper) {
 registerScraper(justjoinScraper);
 registerScraper(nofluffjobsScraper);
 registerScraper(bulldogjobScraper);
+registerScraper(olxScraper);
 
 export async function runAllScrapers(): Promise<{
   total: number;
