@@ -1,11 +1,14 @@
-import { Scraper, JobOfferInput } from './types';
+import { Scraper } from './types';
 import { db } from '@/lib/db';
+import { justjoinScraper } from './justjoin';
 
 const scrapers: Scraper[] = [];
 
 export function registerScraper(scraper: Scraper) {
   scrapers.push(scraper);
 }
+
+registerScraper(justjoinScraper);
 
 export async function runAllScrapers(): Promise<{
   total: number;
