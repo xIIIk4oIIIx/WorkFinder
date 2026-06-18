@@ -7,6 +7,7 @@ export const nofluffjobsScraper: Scraper = {
 
   async fetchJobs(): Promise<JobOfferInput[]> {
     const response = await fetch(API_URL);
+    if (!response.ok) throw new Error(`nofluffjobs: HTTP ${response.status}`);
     const data = await response.json();
 
     return data.postings?.map((item: any) => ({

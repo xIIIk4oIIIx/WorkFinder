@@ -13,6 +13,7 @@ export const pracujScraper: Scraper = {
         Accept: 'application/json',
       },
     });
+    if (!response.ok) throw new Error(`pracuj: HTTP ${response.status}`);
     const data = await response.json();
 
     return (

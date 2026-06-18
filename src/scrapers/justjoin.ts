@@ -26,6 +26,7 @@ export const justjoinScraper: Scraper = {
 
   async fetchJobs(): Promise<JobOfferInput[]> {
     const response = await fetch(API_URL);
+    if (!response.ok) throw new Error(`justjoin: HTTP ${response.status}`);
     const data: JustJoinItem[] = await response.json();
 
     return data.map((item) => ({

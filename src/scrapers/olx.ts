@@ -11,6 +11,7 @@ export const olxScraper: Scraper = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       },
     });
+    if (!response.ok) throw new Error(`olx: HTTP ${response.status}`);
     const data = await response.json();
 
     return data.data?.map((item: any) => ({

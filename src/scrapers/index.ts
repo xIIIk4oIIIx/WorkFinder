@@ -38,30 +38,55 @@ export async function runAllScrapers(): Promise<{
       const jobs = result.value;
       total += jobs.length;
 
-      for (const job of jobs) {
-        const existing = await db.jobOffer.findUnique({
-          where: { sourceUrl: job.sourceUrl },
-        });
+      const sourceUrls = jobs.map((j) => j.sourceUrl);
+      const existing = await db.jobOffer.findMany({
+        where: { sourceUrl: { in: sourceUrls } },
+        select: { sourceUrl: true },
+      });
+      const existingUrls = new Set(existing.map((e) => e.sourceUrl));
 
-        if (!existing) {
-          await db.jobOffer.create({ data: job });
-          newCount++;
-        } else {
-          await db.jobOffer.update({
+      await db.$transaction(
+        jobs.map((job) =>
+          db.jobOffer.upsert({
             where: { sourceUrl: job.sourceUrl },
-            data: {
-              salaryMin: job.salaryMin ?? existing.salaryMin,
-              salaryMax: job.salaryMax ?? existing.salaryMax,
-              technologies:
-                job.technologies.length > 0
-                  ? job.technologies
-                  : existing.technologies,
+            create: {
+              source: job.source,
+              externalId: job.externalId,
+              sourceUrl: job.sourceUrl,
+              title: job.title,
+              company: job.company,
+              city: job.city,
+              region: job.region,
               remote: job.remote,
-              workMode: job.workMode ?? existing.workMode,
+              workMode: job.workMode,
+              salaryMin: job.salaryMin,
+              salaryMax: job.salaryMax,
+              salaryCurrency: job.salaryCurrency,
+              technologies: job.technologies,
+              description: job.description,
+              publishedAt: job.publishedAt,
             },
-          });
-          updated++;
-        }
+            update: {
+              title: job.title,
+              company: job.company,
+              city: job.city,
+              region: job.region,
+              remote: job.remote,
+              workMode: job.workMode,
+              salaryMin: job.salaryMin,
+              salaryMax: job.salaryMax,
+              salaryCurrency: job.salaryCurrency,
+              technologies: job.technologies.length > 0 ? job.technologies : undefined,
+              description: job.description,
+              publishedAt: job.publishedAt,
+            },
+          })
+        )
+      );
+
+      for (const job of jobs) {
+        if (existingUrls.has(job.sourceUrl)) updated++;
+        else newCount++;
       }
     } else {
       errors.push(String(result.reason));

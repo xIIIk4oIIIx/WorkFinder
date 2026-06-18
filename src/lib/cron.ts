@@ -3,7 +3,12 @@ import { runAllScrapers } from '@/scrapers';
 
 let isRunning = false;
 
+const CRON_KEY = Symbol.for('workfinder-cron-started');
+
 export function startCronJob() {
+  if ((globalThis as any)[CRON_KEY]) return;
+  (globalThis as any)[CRON_KEY] = true;
+
   if (process.env.CRON_ENABLED !== 'true') {
     console.log('[Cron] Disabled via CRON_ENABLED env var');
     return;

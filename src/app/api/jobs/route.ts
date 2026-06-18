@@ -2,11 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { Prisma } from '@/generated/prisma/client';
 
+const ALLOWED_SORT_COLUMNS = [
+  'createdAt', 'updatedAt', 'title', 'company', 'city',
+  'salaryMin', 'salaryMax', 'publishedAt', 'source',
+] as const;
+
+const ALLOWED_ORDERS = ['asc', 'desc'] as const;
+
+function clampInt(value: string | null, min: number, max: number, fallback: number): number {
+  const parsed = parseInt(value ?? '');
+  if (isNaN(parsed)) return fallback;
+  return Math.max(min, Math.min(max, parsed));
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
 
-  const page = parseInt(searchParams.get('page') ?? '1');
-  const limit = parseInt(searchParams.get('limit') ?? '25');
+  const page = clampInt(searchParams.get('page'), 1, 10000, 1);
+  const limit = clampInt(searchParams.get('limit'), 1, 100, 25);
   const search = searchParams.get('search') ?? '';
   const city = searchParams.get('city') ?? '';
   const technology = searchParams.get('technology') ?? '';
@@ -19,8 +32,15 @@ export async function GET(request: NextRequest) {
     : undefined;
   const company = searchParams.get('company') ?? '';
   const publishedAfter = searchParams.get('publishedAfter') ?? '';
-  const sort = searchParams.get('sort') ?? 'createdAt';
-  const order = searchParams.get('order') ?? 'desc';
+  const sortParam = searchParams.get('sort') ?? 'createdAt';
+  const orderParam = searchParams.get('order') ?? 'desc';
+
+  const sort = ALLOWED_SORT_COLUMNS.includes(sortParam as any)
+    ? sortParam
+    : 'createdAt';
+  const order = ALLOWED_ORDERS.includes(orderParam as any)
+    ? orderParam
+    : 'desc';
 
   const where: Prisma.JobOfferWhereInput = {};
 

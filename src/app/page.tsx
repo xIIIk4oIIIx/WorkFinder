@@ -1,24 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { SearchBar } from '@/components/SearchBar';
 import { Filters, FilterState } from '@/components/Filters';
 import { JobTable } from '@/components/JobTable';
-
-interface Job {
-  id: string;
-  title: string;
-  company: string;
-  city: string | null;
-  salaryMin: number | null;
-  salaryMax: number | null;
-  salaryCurrency: string | null;
-  technologies: string[];
-  workMode: string | null;
-  source: string;
-  sourceUrl: string;
-  publishedAt: string | null;
-}
+import type { Job } from '@/types/job';
 
 export default function Home() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -37,31 +23,47 @@ export default function Home() {
   });
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchJobs = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    params.set('page', String(page));
-    params.set('limit', '25');
-    if (search) params.set('search', search);
-    if (filters.city) params.set('city', filters.city);
-    if (filters.technology) params.set('technology', filters.technology);
-    if (filters.workMode) params.set('workMode', filters.workMode);
-    if (filters.salaryMin) params.set('salaryMin', filters.salaryMin);
-    if (filters.salaryMax) params.set('salaryMax', filters.salaryMax);
-    if (filters.company) params.set('company', filters.company);
-    if (filters.publishedAfter) params.set('publishedAfter', filters.publishedAfter);
+    setError(null);
+    try {
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('limit', '25');
+      if (search) params.set('search', search);
+      if (filters.city) params.set('city', filters.city);
+      if (filters.technology) params.set('technology', filters.technology);
+      if (filters.workMode) params.set('workMode', filters.workMode);
+      if (filters.salaryMin) params.set('salaryMin', filters.salaryMin);
+      if (filters.salaryMax) params.set('salaryMax', filters.salaryMax);
+      if (filters.company) params.set('company', filters.company);
+      if (filters.publishedAfter) params.set('publishedAfter', filters.publishedAfter);
 
-    const res = await fetch(`/api/jobs?${params.toString()}`);
-    const data = await res.json();
-    setJobs(data.jobs);
-    setTotal(data.pagination.total);
-    setTotalPages(data.pagination.totalPages);
-    setLoading(false);
+      const res = await fetch(`/api/jobs?${params.toString()}`);
+      if (!res.ok) throw new Error(`Błąd serwera: ${res.status}`);
+      const data = await res.json();
+      setJobs(data.jobs);
+      setTotal(data.pagination.total);
+      setTotalPages(data.pagination.totalPages);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Nie udało się załadować danych');
+    } finally {
+      setLoading(false);
+    }
   }, [page, search, filters]);
 
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
-    fetchJobs();
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchJobs();
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [fetchJobs]);
 
   const handleSearch = (query: string) => {
@@ -107,6 +109,11 @@ export default function Home() {
           </aside>
 
           <section className="flex-1">
+            {error && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded">
+                {error}
+              </div>
+            )}
             {loading ? (
               <div className="text-center py-8">Ładowanie...</div>
             ) : (

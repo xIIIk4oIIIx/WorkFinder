@@ -7,6 +7,7 @@ export const bulldogjobScraper: Scraper = {
 
   async fetchJobs(): Promise<JobOfferInput[]> {
     const response = await fetch(API_URL);
+    if (!response.ok) throw new Error(`bulldogjob: HTTP ${response.status}`);
     const data = await response.json();
 
     return data.jobs?.map((item: any) => ({
