@@ -1,6 +1,7 @@
 import { Scraper } from './types';
 import { db } from '@/lib/db';
 import { justjoinScraper } from './justjoin';
+import { nofluffjobsScraper } from './nofluffjobs';
 
 const scrapers: Scraper[] = [];
 
@@ -9,6 +10,7 @@ export function registerScraper(scraper: Scraper) {
 }
 
 registerScraper(justjoinScraper);
+registerScraper(nofluffjobsScraper);
 
 export async function runAllScrapers(): Promise<{
   total: number;
