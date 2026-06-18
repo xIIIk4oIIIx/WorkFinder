@@ -4,6 +4,7 @@ import { justjoinScraper } from './justjoin';
 import { nofluffjobsScraper } from './nofluffjobs';
 import { bulldogjobScraper } from './bulldogjob';
 import { olxScraper } from './olx';
+import { pracujScraper } from './pracuj';
 
 const scrapers: Scraper[] = [];
 
@@ -15,6 +16,7 @@ registerScraper(justjoinScraper);
 registerScraper(nofluffjobsScraper);
 registerScraper(bulldogjobScraper);
 registerScraper(olxScraper);
+registerScraper(pracujScraper);
 
 export async function runAllScrapers(): Promise<{
   total: number;
