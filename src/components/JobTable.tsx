@@ -85,13 +85,149 @@ function getSourceDots(sources: JobSource[]): { source: string; count: number }[
   return Array.from(map.entries()).map(([source, count]) => ({ source, count }));
 }
 
-function SourceBadge({ source }: { source: string }) {
-  const info = SOURCE_MAP[source] ?? { label: source.toUpperCase().slice(0, 3), color: 'bg-muted' };
+function GroupedCard({ job }: { job: GroupedJob }) {
+  const [expanded, setExpanded] = useState(false);
+  const salary = getBestSalary(job);
+  const modeClass = WORK_MODE_STYLES[job.workMode ?? ''] ?? 'bg-slate-100 text-slate-600';
+  const sourceDots = getSourceDots(job.sources);
+  const primarySource = job.sources[0];
+  const primaryUrl = primarySource?.sourceUrl ?? '#';
+
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2 py-0.5 rounded-md border border-border bg-card text-muted-foreground">
-      <span className={`w-1.5 h-1.5 rounded-full ${info.color}`} />
-      {info.label}
-    </span>
+    <div className="border border-border rounded-lg bg-card p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <a
+            href={primaryUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-foreground hover:text-accent hover:underline underline-offset-2 transition-colors block text-sm leading-snug break-words"
+          >
+            {job.title}
+          </a>
+          <div className="text-xs text-muted-foreground mt-0.5 break-words">{job.company}</div>
+        </div>
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="w-8 h-8 flex items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors flex-shrink-0"
+        >
+          <svg className={`w-4 h-4 transition-transform ${expanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 mt-2">
+        {salary.min || salary.max ? (
+          <span className="font-[family-name:var(--font-mono)] text-accent font-medium text-xs">
+            {formatSalary(salary.min, salary.max, salary.currency)}
+          </span>
+        ) : null}
+        {job.city && (
+          <span className="text-xs text-muted-foreground">{job.city}</span>
+        )}
+        <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${modeClass}`}>
+          <span className="w-1.5 h-1.5 rounded-full bg-current" />
+          {workModeLabel(job.workMode)}
+        </span>
+      </div>
+
+      <div className="flex flex-wrap gap-1 mt-2">
+        {sourceDots.map(({ source, count }) => (
+          <span key={source} className="inline-flex items-center gap-1 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2 py-0.5 rounded-md border border-border bg-card text-muted-foreground">
+            <span className={`w-1.5 h-1.5 rounded-full ${SOURCE_MAP[source]?.color ?? 'bg-muted'}`} />
+            {SOURCE_MAP[source]?.label ?? source}
+            {count > 1 && <span className="text-[10px] text-muted-foreground/60">x{count}</span>}
+          </span>
+        ))}
+      </div>
+
+      {expanded && (
+        <div className="mt-3 pt-3 border-t border-border space-y-2">
+          {job.technologies.filter(Boolean).length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {job.technologies.filter(Boolean).map((tech, i) => (
+                <span key={`${tech}-${i}`} className="inline-flex items-center text-[11px] font-[family-name:var(--font-mono)] font-medium px-2 py-0.5 rounded-md bg-muted text-foreground">
+                  {tech}
+                </span>
+              ))}
+            </div>
+          )}
+          {job.sources.map((src) => {
+            const srcInfo = SOURCE_MAP[src.source] ?? { label: src.source, color: 'bg-muted' };
+            return (
+              <div key={src.id} className="flex items-center gap-2 text-xs">
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${srcInfo.color}`} />
+                <span className="font-[family-name:var(--font-mono)] font-medium text-muted-foreground">{srcInfo.label}</span>
+                <a href={src.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent hover:underline font-[family-name:var(--font-mono)] break-all truncate">
+                  {src.sourceUrl ?? '—'}
+                </a>
+                <span className="text-muted-foreground font-[family-name:var(--font-mono)] ml-auto flex-shrink-0">
+                  {relativeTime(src.publishedAt)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FlatCard({ job }: { job: Job }) {
+  const source = SOURCE_MAP[job.source] ?? { label: job.source, color: 'bg-muted' };
+  const salary = formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency);
+  const modeClass = WORK_MODE_STYLES[job.workMode ?? ''] ?? 'bg-slate-100 text-slate-600';
+
+  return (
+    <div className="border border-border rounded-lg bg-card p-4">
+      <div className="min-w-0">
+        <a
+          href={job.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-foreground hover:text-accent hover:underline underline-offset-2 transition-colors block text-sm leading-snug break-words"
+        >
+          {job.title}
+        </a>
+        <div className="text-xs text-muted-foreground mt-0.5 break-words">{job.company}</div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 mt-2">
+        {salary && (
+          <span className="font-[family-name:var(--font-mono)] text-accent font-medium text-xs">{salary}</span>
+        )}
+        {job.city && (
+          <span className="text-xs text-muted-foreground">{job.city}</span>
+        )}
+        <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${modeClass}`}>
+          <span className="w-1.5 h-1.5 rounded-full bg-current" />
+          {workModeLabel(job.workMode)}
+        </span>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 mt-2">
+        <span className="inline-flex items-center gap-1 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2 py-0.5 rounded-md border border-border bg-card text-muted-foreground">
+          <span className={`w-1.5 h-1.5 rounded-full ${source.color}`} />
+          {source.label}
+        </span>
+        {job.technologies.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {job.technologies.slice(0, 3).map((tech) => (
+              <span key={tech} className="inline-flex items-center text-[11px] font-[family-name:var(--font-mono)] font-medium px-2 py-0.5 rounded-md bg-muted text-foreground">
+                {tech}
+              </span>
+            ))}
+            {job.technologies.length > 3 && (
+              <span className="text-[11px] text-muted-foreground">+{job.technologies.length - 3}</span>
+            )}
+          </div>
+        )}
+        <span className="text-xs text-muted-foreground font-[family-name:var(--font-mono)] ml-auto">
+          {relativeTime(job.publishedAt)}
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -134,12 +270,9 @@ function GroupedRow({ job }: { job: GroupedJob }) {
               >
                 {job.title}
               </a>
-              <div
-       className="text-xs text-muted-foreground mt-0.5 break-words"
-       title={job.company}
-     >
-       {job.company}
-     </div>
+              <div className="text-xs text-muted-foreground mt-0.5 break-words" title={job.company}>
+                {job.company}
+              </div>
             </div>
           </div>
         </td>
@@ -203,7 +336,6 @@ function GroupedRow({ job }: { job: GroupedJob }) {
                 >
                   {src.sourceUrl ?? '—'}
                 </a>
-
                 <span className="text-[11px] text-muted-foreground font-[family-name:var(--font-mono)]">
                   {relativeTime(src.publishedAt)}
                 </span>
@@ -232,12 +364,9 @@ function FlatRow({ job }: { job: Job }) {
         >
           {job.title}
         </a>
-        <div
-       className="text-xs text-muted-foreground mt-0.5 break-words"
-       title={job.company}
-     >
-       {job.company}
-     </div>
+        <div className="text-xs text-muted-foreground mt-0.5 break-words" title={job.company}>
+          {job.company}
+        </div>
       </td>
       <td className="p-3 text-muted-foreground text-sm">{job.city ?? '—'}</td>
       <td className="p-3">
@@ -298,29 +427,41 @@ export function JobTable({ jobs, total, page, totalPages, onPageChange }: JobTab
   return (
     <div>
       <div className="border border-border rounded-lg bg-card">
-        <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted">
-              <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap max-w-[260px]">Tytuł / Firma</th>
-              <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Lokalizacja</th>
-              <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Zarobki</th>
-              <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Technologie</th>
-              <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden xl:table-cell">Tryb</th>
-              <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Źródło</th>
-              <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden lg:table-cell">Data</th>
-            </tr>
-          </thead>
-          <tbody>
-            {jobs.map((job) =>
-              isGrouped(job) ? (
-                <GroupedRow key={job.id} job={job} />
-              ) : (
-                <FlatRow key={job.id} job={job} />
-              )
-            )}
-          </tbody>
-        </table>
+        {/* Mobile card view */}
+        <div className="lg:hidden divide-y divide-border">
+          {jobs.map((job) =>
+            isGrouped(job) ? (
+              <GroupedCard key={job.id} job={job} />
+            ) : (
+              <FlatCard key={job.id} job={job} />
+            )
+          )}
+        </div>
+
+        {/* Desktop table view */}
+        <div className="hidden lg:block overflow-x-auto">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted">
+                <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap max-w-[260px]">Tytuł / Firma</th>
+                <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Lokalizacja</th>
+                <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Zarobki</th>
+                <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Technologie</th>
+                <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden xl:table-cell">Tryb</th>
+                <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Źródło</th>
+                <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden xl:table-cell">Data</th>
+              </tr>
+            </thead>
+            <tbody>
+              {jobs.map((job) =>
+                isGrouped(job) ? (
+                  <GroupedRow key={job.id} job={job} />
+                ) : (
+                  <FlatRow key={job.id} job={job} />
+                )
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
