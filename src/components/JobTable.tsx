@@ -27,6 +27,22 @@ const WORK_MODE_STYLES: Record<string, string> = {
   hybrid: 'bg-amber-100 text-amber-700',
 };
 
+function parseMarkdown(text: string): string {
+  return text
+    // Headers ### → <h3>
+    .replace(/^### (.+)$/gm, '<h3 class="text-sm font-semibold text-foreground mt-2 mb-1">$1</h3>')
+    // Bold **text** → <strong>
+    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground">$1</strong>')
+    // Italic *text* → <em>
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // List items * → <li>
+    .replace(/^\* (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
+    // Wrap consecutive <li> in <ul>
+    .replace(/((?:<li[^>]*>.*?<\/li>\n?)+)/g, '<ul class="my-1">$1</ul>')
+    // Line breaks
+    .replace(/\n/g, '<br />');
+}
+
 function relativeTime(dateStr: string | null): string {
   if (!dateStr) return '—';
   const date = new Date(dateStr);
@@ -205,9 +221,10 @@ function GroupedCard({ job }: { job: GroupedJob }) {
               <div className="text-xs text-destructive">{summaryError}</div>
             )}
             {summary && (
-              <div className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                {summary}
-              </div>
+              <div
+                className="text-xs text-muted-foreground leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: parseMarkdown(summary) }}
+              />
             )}
           </div>
 
@@ -451,9 +468,10 @@ function GroupedRow({ job }: { job: GroupedJob }) {
                   <div className="text-xs text-destructive">{summaryError}</div>
                 )}
                 {summary && (
-                  <div className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                    {summary}
-                  </div>
+                  <div
+                    className="text-xs text-muted-foreground leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: parseMarkdown(summary) }}
+                  />
                 )}
               </div>
             </td>
