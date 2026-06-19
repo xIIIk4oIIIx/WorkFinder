@@ -99,33 +99,35 @@ function buildPrompt(
 ): string {
   const content = scrapedContent || existingDescription || 'Brak szczegółowego opisu';
 
-  return `Jesteś ekspertem ds. rekrutacji IT. Przeanalizuj poniższą ofertę pracy i stwórz zwięzłe podsumowanie.
+  return `Przeanalizuj poniższą ofertę pracy i wyciągnij najważniejsze informacje, których NIE WIDAĆ gołym okiem w podstawowych danych.
 
-Użyj DOKŁADNIE poniższego formatu Markdown:
+Odpowiedz TYLKO w poniższym formacie Markdown:
 
-**📋 Stanowisko:** ${jobTitle}
-**🏢 Firma:** ${company}
+### 🎯 Co będziesz robić?
+[2-3 zdania o faktycznych obowiązkach - nie tytuły stanowisk, tylko konkretne zadania]
 
-### 💰 Wynagrodzenie
-[Jeśli podane w treści - widełki, jeśli nie - "Do negocjacji"]
+### 💎 Co firma oferuje oprócz pensji?
+[Benefity, szkolenia, atmosfera, ciekawe projekty - tylko to co jest w treści]
 
-### 📍 Lokalizacja i tryb pracy
-[Miasto, tryb (zdalny/stacjonarny/hybrydowy)]
+### ⚠️ Na co zwrócić uwagę?
+[Czerwone flagi: brak widełek, overload wymagań, niejasne warunki, lub pozytywne zaskoczenia]
 
-### 🔧 Wymagane technologie
-[Krótkie zestawienie kluczowych technologii]
+### 👥 Zespół i praca
+[Rozmiar zespołu, z kim współpracujesz, tryb pracy, godziny - jeśli wiadomo]
 
-### 📋 Opis stanowiska
-[2-3 zdania o czym jest ta rola, jakie obowiązki]
+### 🔮 Perspektywy
+[Rozwój, ścieżka kariery, możliwość nauki - jeśli wynika z oferty]
 
-### 🎯 Dla kogo?
-[Krótko - jaki profil kandydata jest idealny]
+Zasady:
+- Pisz konkretnie, unikaj ogólników
+- Jeśli czegoś nie ma w treści, NIE wymyślaj - po prostu pomiń tę sekcję
+- Nie powtarzaj danych z tabeli (tytuł, firma, miasto, technologie)
 
-Zwróć TYLKO wypełniony format, bez dodatkowego tekstu.
-
+Oferta:
+${jobTitle} w ${company}
 Technologie: ${technologies.join(', ')}
 
-Treść oferty:
+Treść strony:
 ${content}`;
 }
 
