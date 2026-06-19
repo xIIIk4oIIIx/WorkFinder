@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { DualRangeSlider } from './DualRangeSlider';
 
 interface FiltersProps {
   onFilter: (filters: FilterState) => void;
@@ -9,114 +10,190 @@ interface FiltersProps {
 export interface FilterState {
   city: string;
   technology: string;
-  workMode: string;
+  workMode: string[];
   salaryMin: string;
   salaryMax: string;
   company: string;
   publishedAfter: string;
+  sources: string[];
 }
 
+const AVAILABLE_SOURCES = [
+  { id: 'nofluffjobs', label: 'NoFluffJobs', color: 'bg-accent' },
+  { id: 'bulldogjob', label: 'BulldogJob', color: 'bg-blue-500' },
+  { id: 'olx', label: 'OLX', color: 'bg-orange-500' },
+  { id: 'justjoin', label: 'JustJoin', color: 'bg-violet-500' },
+  { id: 'rocketjobs', label: 'RocketJobs', color: 'bg-cyan-500' },
+  { id: 'jooble', label: 'Jooble', color: 'bg-emerald-500' },
+  { id: 'pracuj', label: 'Pracuj.pl', color: 'bg-rose-500' },
+];
+
+const WORK_MODE_OPTIONS = [
+  { id: 'remote', label: 'Zdalnie', color: 'bg-emerald-500' },
+  { id: 'office', label: 'Stacjonarnie', color: 'bg-slate-400' },
+  { id: 'hybrid', label: 'Hybrydowo', color: 'bg-amber-500' },
+];
+
+const DEFAULT_FILTERS: FilterState = {
+  city: '',
+  technology: '',
+  workMode: [], // Empty array means all work modes selected
+  salaryMin: '',
+  salaryMax: '',
+  company: '',
+  publishedAfter: '',
+  sources: [], // Empty array means all sources selected
+};
+
 export function Filters({ onFilter }: FiltersProps) {
-  const [filters, setFilters] = useState<FilterState>({
-    city: '',
-    technology: '',
-    workMode: '',
-    salaryMin: '',
-    salaryMax: '',
-    company: '',
-    publishedAfter: '',
-  });
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
 
   const handleChange = (key: keyof FilterState, value: string) => {
-    const newFilters = { ...filters, [key]: value };
-    setFilters(newFilters);
-    onFilter(newFilters);
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSourceToggle = (sourceId: string) => {
+    setFilters((prev) => {
+      const next = prev.sources.includes(sourceId)
+        ? prev.sources.filter((s) => s !== sourceId)
+        : [...prev.sources, sourceId];
+      return { ...prev, sources: next };
+    });
+  };
+
+  const handleWorkModeToggle = (workMode: string) => {
+    setFilters((prev) => {
+      const next = prev.workMode.includes(workMode)
+        ? prev.workMode.filter((m) => m !== workMode)
+        : [...prev.workMode, workMode];
+      return { ...prev, workMode: next };
+    });
+  };
+
+  const handleClear = () => {
+    setFilters(DEFAULT_FILTERS);
+    onFilter(DEFAULT_FILTERS);
+  };
+
+  const handleApply = () => {
+    onFilter(filters);
   };
 
   return (
-    <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-      <h3 className="font-semibold text-lg">Filtry</h3>
-
-      <div>
-        <label className="block text-sm font-medium mb-1">Miasto</label>
-        <input
-          type="text"
-          value={filters.city}
-          onChange={(e) => handleChange('city', e.target.value)}
-          placeholder="np. Warszawa"
-          className="w-full px-3 py-2 border rounded"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-1">Technologia</label>
-        <input
-          type="text"
-          value={filters.technology}
-          onChange={(e) => handleChange('technology', e.target.value)}
-          placeholder="np. React"
-          className="w-full px-3 py-2 border rounded"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-1">Tryb pracy</label>
-        <select
-          value={filters.workMode}
-          onChange={(e) => handleChange('workMode', e.target.value)}
-          className="w-full px-3 py-2 border rounded"
+    <div className="bg-muted border border-border rounded-lg p-4">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-semibold tracking-tight">Filtry</h3>
+        <button
+          onClick={handleClear}
+          className="text-[11px] font-[family-name:var(--font-mono)] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
         >
-          <option value="">Wszystkie</option>
-          <option value="remote">Zdalnie</option>
-          <option value="office">Stacjonarnie</option>
-          <option value="hybrid">Hybrydowo</option>
-        </select>
+          Wyczyść wszystkie
+        </button>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1">Zarobki (min-max)</label>
-        <div className="flex gap-2">
+      <div className="space-y-4">
+        <div className="pb-3 border-b border-border">
+          <div className="text-[10px] font-[family-name:var(--font-mono)] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Lokalizacja</div>
+          <div className="space-y-2">
+            <input
+              type="text"
+              value={filters.city}
+              onChange={(e) => handleChange('city', e.target.value)}
+              placeholder="Miasto"
+              className="w-full px-3 py-1.5 border border-border rounded-md bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
+            />
+            <input
+              type="text"
+              value={filters.company}
+              onChange={(e) => handleChange('company', e.target.value)}
+              placeholder="Firma"
+              className="w-full px-3 py-1.5 border border-border rounded-md bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
+            />
+          </div>
+        </div>
+
+        <div className="pb-3 border-b border-border">
+          <div className="text-[10px] font-[family-name:var(--font-mono)] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Technologia</div>
           <input
-            type="number"
-            value={filters.salaryMin}
-            onChange={(e) => handleChange('salaryMin', e.target.value)}
-            placeholder="Min"
-            className="w-1/2 px-3 py-2 border rounded"
+            type="text"
+            value={filters.technology}
+            onChange={(e) => handleChange('technology', e.target.value)}
+            placeholder="np. React, Node.js"
+            className="w-full px-3 py-1.5 border border-border rounded-md bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
           />
-          <input
-            type="number"
-            value={filters.salaryMax}
-            onChange={(e) => handleChange('salaryMax', e.target.value)}
-            placeholder="Max"
-            className="w-1/2 px-3 py-2 border rounded"
-          />
+        </div>
+
+<div className="pb-3 border-b border-border">
+            <div className="text-[10px] font-[family-name:var(--font-mono)] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Praca</div>
+            <div className="space-y-2">
+              <div className="flex flex-wrap gap-1.5">
+                {WORK_MODE_OPTIONS.map((mode) => (
+                  <button
+                    key={mode.id}
+                    onClick={() => handleWorkModeToggle(mode.id)}
+                    className={`inline-flex items-center gap-1.5 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2.5 py-1 rounded-md border transition-colors ${
+                      filters.workMode.includes(mode.id)
+                        ? 'border-accent/30 bg-accent/10 text-accent'
+                        : 'border-border bg-card text-muted-foreground'
+                    }`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${mode.id === 'remote' ? 'bg-emerald-500' : mode.id === 'office' ? 'bg-slate-400' : 'bg-amber-500'}`} />
+                    {mode.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="pb-3 border-b border-border">
+            <div className="text-[10px] font-[family-name:var(--font-mono)] font-semibold uppercase tracking-widest text-muted-foreground mb-2">ZAROBKI</div>
+            <div className="space-y-2">
+              <DualRangeSlider
+                min={0}
+                max={100000}
+                step={1000}
+                value={[
+                  filters.salaryMin !== '' ? parseInt(filters.salaryMin) : 0,
+                  filters.salaryMax !== '' ? parseInt(filters.salaryMax) : 100000,
+                ]}
+                onChange={([min, max]) => {
+                  setFilters((prev) => ({ ...prev, salaryMin: min.toString(), salaryMax: max.toString() }));
+                }}
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{filters.salaryMin !== '' ? `${parseInt(filters.salaryMin).toLocaleString('pl-PL')} PLN` : '0 PLN'}</span>
+                <span>{filters.salaryMax !== '' ? `${parseInt(filters.salaryMax).toLocaleString('pl-PL')} PLN` : '100k PLN'}</span>
+              </div>
+            </div>
+          </div>
+
+        <div>
+          <div className="text-[10px] font-[family-name:var(--font-mono)] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Źródła</div>
+          <div className="flex flex-wrap gap-1.5">
+            {AVAILABLE_SOURCES.map((source) => (
+              <button
+                key={source.id}
+                onClick={() => handleSourceToggle(source.id)}
+                className={`inline-flex items-center gap-1.5 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2.5 py-1 rounded-md border transition-colors ${
+                  filters.sources.includes(source.id)
+                    ? 'border-accent/30 bg-accent/10 text-accent'
+                    : 'border-border bg-card text-muted-foreground'
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${source.color}`} />
+                {source.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1">Firma</label>
-        <input
-          type="text"
-          value={filters.company}
-          onChange={(e) => handleChange('company', e.target.value)}
-          placeholder="np. mBank"
-          className="w-full px-3 py-2 border rounded"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-1">Data publikacji</label>
-        <select
-          value={filters.publishedAfter}
-          onChange={(e) => handleChange('publishedAfter', e.target.value)}
-          className="w-full px-3 py-2 border rounded"
-        >
-          <option value="">Wszystkie</option>
-          <option value={new Date(Date.now() - 86400000).toISOString()}>Ostatnie 24h</option>
-          <option value={new Date(Date.now() - 604800000).toISOString()}>Ostatni tydzień</option>
-          <option value={new Date(Date.now() - 2592000000).toISOString()}>Ostatni miesiąc</option>
-        </select>
-      </div>
+      <button
+        onClick={handleApply}
+        className="w-full mt-4 px-4 py-2 bg-accent text-accent-foreground rounded-md text-sm font-medium hover:bg-accent/90 transition-colors"
+      >
+        Filtruj
+      </button>
     </div>
   );
 }

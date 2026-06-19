@@ -49,4 +49,15 @@
 - [Useme.com](https://useme.com/pl/) – zlecenia / freelancing
 
 ---
-**Uwaga dla agenta:** Portale takie jak Jooble, Jobrapido, Indeed i Careerjet są agregatorami – zbierają oferty z innych serwisów (warto uwzględnić to przy scrapowaniu, aby uniknąć duplikatów).
+
+## Aktywne scrapery (src/scrapers/)
+- `nofluffjobs.ts` — NoFluffJobs API (`/api/posting`)
+- `bulldogjob.ts` — BulldogJob GraphQL API
+- `olx.ts` — OLX REST API (`/api/v1/offers`)
+- `justjoin.ts` — JustJoin HTML + RSC parsing
+- `rocketjobs.ts` — RocketJobs HTML + RSC parsing
+- `jooble.ts` — Jooble API (POST, free tier)
+- `adzuna.ts` — Adzuna REST API (requires free API key: ADZUNA_APP_ID + ADZUNA_APP_KEY)
+
+---
+**Uwaga dla agenta:** Portale takie jak Jooble, Jobrapido i Careerjet są agregatorami – zbierają oferty z innych serwisów (warto uwzględnić to przy scrapowaniu, aby uniknąć duplikatów).

@@ -1,9 +1,11 @@
 import { Scraper } from './types';
 import { db } from '@/lib/db';
-import { justjoinScraper } from './justjoin';
 import { nofluffjobsScraper } from './nofluffjobs';
 import { bulldogjobScraper } from './bulldogjob';
 import { olxScraper } from './olx';
+import { justjoinScraper } from './justjoin';
+import { rocketjobsScraper } from './rocketjobs';
+import { joobleScraper } from './jooble';
 import { pracujScraper } from './pracuj';
 
 const scrapers: Scraper[] = [];
@@ -12,10 +14,12 @@ export function registerScraper(scraper: Scraper) {
   scrapers.push(scraper);
 }
 
-registerScraper(justjoinScraper);
 registerScraper(nofluffjobsScraper);
 registerScraper(bulldogjobScraper);
 registerScraper(olxScraper);
+registerScraper(justjoinScraper);
+registerScraper(rocketjobsScraper);
+registerScraper(joobleScraper);
 registerScraper(pracujScraper);
 
 export async function runAllScrapers(): Promise<{
@@ -30,68 +34,55 @@ export async function runAllScrapers(): Promise<{
 
   let total = 0;
   let newCount = 0;
-  let updated = 0;
   const errors: string[] = [];
 
   for (const result of results) {
     if (result.status === 'fulfilled') {
       const jobs = result.value;
       total += jobs.length;
+      const source = jobs[0]?.source;
+      if (!source || jobs.length === 0) continue;
 
-      const sourceUrls = jobs.map((j) => j.sourceUrl);
-      const existing = await db.jobOffer.findMany({
-        where: { sourceUrl: { in: sourceUrls } },
-        select: { sourceUrl: true },
-      });
-      const existingUrls = new Set(existing.map((e) => e.sourceUrl));
+      const BATCH = 100;
+      for (let i = 0; i < jobs.length; i += BATCH) {
+        const batch = jobs.slice(i, i + BATCH);
+        const urls = batch.map((j) => j.sourceUrl);
 
-      await db.$transaction(
-        jobs.map((job) =>
-          db.jobOffer.upsert({
-            where: { sourceUrl: job.sourceUrl },
-            create: {
-              source: job.source,
-              externalId: job.externalId,
-              sourceUrl: job.sourceUrl,
-              title: job.title,
-              company: job.company,
-              city: job.city,
-              region: job.region,
-              remote: job.remote,
-              workMode: job.workMode,
-              salaryMin: job.salaryMin,
-              salaryMax: job.salaryMax,
-              salaryCurrency: job.salaryCurrency,
-              technologies: job.technologies,
-              description: job.description,
-              publishedAt: job.publishedAt,
-            },
-            update: {
-              title: job.title,
-              company: job.company,
-              city: job.city,
-              region: job.region,
-              remote: job.remote,
-              workMode: job.workMode,
-              salaryMin: job.salaryMin,
-              salaryMax: job.salaryMax,
-              salaryCurrency: job.salaryCurrency,
-              technologies: job.technologies.length > 0 ? job.technologies : undefined,
-              description: job.description,
-              publishedAt: job.publishedAt,
-            },
-          })
-        )
-      );
+        const existing = await db.jobOffer.findMany({
+          where: { sourceUrl: { in: urls } },
+          select: { sourceUrl: true },
+        });
+        const existingSet = new Set(existing.map((e) => e.sourceUrl));
+        const newJobs = batch.filter((j) => !existingSet.has(j.sourceUrl));
 
-      for (const job of jobs) {
-        if (existingUrls.has(job.sourceUrl)) updated++;
-        else newCount++;
+        if (newJobs.length > 0) {
+          await db.jobOffer.createMany({
+            data: newJobs.map((j) => ({
+              source: j.source,
+              externalId: j.externalId,
+              sourceUrl: j.sourceUrl,
+              title: j.title,
+              company: j.company,
+              city: j.city || null,
+              region: j.region || null,
+              remote: j.remote,
+              workMode: j.workMode || null,
+              salaryMin: j.salaryMin || null,
+              salaryMax: j.salaryMax || null,
+              salaryCurrency: j.salaryCurrency || 'PLN',
+              technologies: j.technologies,
+              description: j.description || null,
+              publishedAt: j.publishedAt || null,
+            })),
+            skipDuplicates: true,
+          });
+          newCount += newJobs.length;
+        }
       }
     } else {
       errors.push(String(result.reason));
     }
   }
 
-  return { total, new: newCount, updated, errors };
+  return { total, new: newCount, updated: total - newCount, errors };
 }

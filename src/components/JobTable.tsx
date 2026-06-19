@@ -1,99 +1,361 @@
 'use client';
 
-import type { Job } from '@/types/job';
+import { useState } from 'react';
+import type { Job, GroupedJob, JobSource } from '@/types/job';
 
 interface JobTableProps {
-  jobs: Job[];
+  jobs: (Job | GroupedJob)[];
   total: number;
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
 }
 
-export function JobTable({ jobs, total, page, totalPages, onPageChange }: JobTableProps) {
-  const formatSalary = (min: number | null, max: number | null, currency: string | null) => {
-    if (!min && !max) return 'Brak danych';
-    const fmt = (n: number) => n.toLocaleString('pl-PL');
-    if (min && max) return `${fmt(min)} - ${fmt(max)} ${currency ?? 'PLN'}`;
-    if (min) return `od ${fmt(min)} ${currency ?? 'PLN'}`;
-    return `do ${fmt(max!)} ${currency ?? 'PLN'}`;
-  };
+const SOURCE_MAP: Record<string, { label: string; color: string }> = {
+  nofluffjobs: { label: 'NoFluffJobs', color: 'bg-accent' },
+  justjoin: { label: 'JustJoin', color: 'bg-violet-500' },
+  bulldogjob: { label: 'BulldogJob', color: 'bg-blue-500' },
+  olx: { label: 'OLX', color: 'bg-orange-500' },
+  rocketjobs: { label: 'RocketJobs', color: 'bg-cyan-500' },
+  jooble: { label: 'Jooble', color: 'bg-emerald-500' },
+  pracuj: { label: 'Pracuj.pl', color: 'bg-rose-500' },
+};
 
-  const workModeLabel = (mode: string | null) => {
-    const labels: Record<string, string> = { remote: 'Zdalnie', office: 'Stacjonarnie', hybrid: 'Hybrydowo' };
-    return labels[mode ?? ''] ?? mode ?? 'Nieokreślony';
+const WORK_MODE_STYLES: Record<string, string> = {
+  remote: 'bg-emerald-100 text-emerald-700',
+  office: 'bg-slate-100 text-slate-600',
+  hybrid: 'bg-amber-100 text-amber-700',
+};
+
+function relativeTime(dateStr: string | null): string {
+  if (!dateStr) return '—';
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return 'przed chwilą';
+  if (diffMins < 60) return `${diffMins} min temu`;
+  if (diffHours < 24) return `${diffHours} godz temu`;
+  if (diffDays === 1) return '1 dzień temu';
+  if (diffDays < 7) return `${diffDays} dni temu`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} tyg temu`;
+  return date.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' });
+}
+
+function formatSalary(min: number | null, max: number | null, currency: string | null) {
+  if (!min && !max) return null;
+  const fmt = (n: number) => n.toLocaleString('pl-PL');
+  const cur = currency ?? 'PLN';
+  if (min && max) return `${fmt(min)} – ${fmt(max)} ${cur}`;
+  if (min) return `od ${fmt(min)} ${cur}`;
+  return `do ${fmt(max!)} ${cur}`;
+}
+
+function workModeLabel(mode: string | null) {
+  const labels: Record<string, string> = { remote: 'Zdalnie', office: 'Stacjonarnie', hybrid: 'Hybrydowo' };
+  return labels[mode ?? ''] ?? '—';
+}
+
+function isGrouped(job: Job | GroupedJob): job is GroupedJob {
+  return 'sources' in job && Array.isArray((job as GroupedJob).sources);
+}
+
+function getBestSalary(job: GroupedJob): { min: number | null; max: number | null; currency: string | null } {
+  let bestMin: number | null = null;
+  let bestMax: number | null = null;
+  let currency: string | null = null;
+
+  for (const src of job.sources) {
+    if (src.salaryMin != null && (bestMin == null || src.salaryMin > bestMin)) bestMin = src.salaryMin;
+    if (src.salaryMax != null && (bestMax == null || src.salaryMax > bestMax)) bestMax = src.salaryMax;
+    if (src.salaryCurrency) currency = src.salaryCurrency;
+  }
+
+  return { min: bestMin, max: bestMax, currency };
+}
+
+function getSourceDots(sources: JobSource[]): { source: string; count: number }[] {
+  const map = new Map<string, number>();
+  for (const s of sources) {
+    map.set(s.source, (map.get(s.source) ?? 0) + 1);
+  }
+  return Array.from(map.entries()).map(([source, count]) => ({ source, count }));
+}
+
+function SourceBadge({ source }: { source: string }) {
+  const info = SOURCE_MAP[source] ?? { label: source.toUpperCase().slice(0, 3), color: 'bg-muted' };
+  return (
+    <span className="inline-flex items-center gap-1 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2 py-0.5 rounded-md border border-border bg-card text-muted-foreground">
+      <span className={`w-1.5 h-1.5 rounded-full ${info.color}`} />
+      {info.label}
+    </span>
+  );
+}
+
+function GroupedRow({ job }: { job: GroupedJob }) {
+  const [expanded, setExpanded] = useState(false);
+  const salary = getBestSalary(job);
+  const modeClass = WORK_MODE_STYLES[job.workMode ?? ''] ?? 'bg-slate-100 text-slate-600';
+  const sourceDots = getSourceDots(job.sources);
+  const primarySource = job.sources[0];
+  const primaryUrl = primarySource?.sourceUrl ?? '#';
+
+  return (
+    <>
+      <tr className="border-b border-border hover:bg-muted/50 transition-colors group">
+        <td className="p-3 min-w-0 max-w-[260px]">
+          <div className="flex items-start gap-2">
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="mt-0.5 w-5 h-5 flex items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors flex-shrink-0"
+              aria-label={expanded ? 'Zwiń' : 'Rozwiń'}
+            >
+              <svg
+                className={`w-3 h-3 transition-transform ${expanded ? 'rotate-90' : ''}`}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m9 18 6-6-6-6" />
+              </svg>
+            </button>
+            <div className="min-w-0 flex-1">
+              <a
+                href={primaryUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-foreground hover:text-accent hover:underline underline-offset-2 transition-colors block text-sm leading-snug break-words"
+              >
+                {job.title}
+              </a>
+              <div
+       className="text-xs text-muted-foreground mt-0.5 break-words"
+       title={job.company}
+     >
+       {job.company}
+     </div>
+            </div>
+          </div>
+        </td>
+        <td className="p-3 text-muted-foreground text-sm">{job.city ?? '—'}</td>
+        <td className="p-3">
+          {salary.min || salary.max ? (
+            <span className="font-[family-name:var(--font-mono)] text-accent font-medium text-xs">
+              {formatSalary(salary.min, salary.max, salary.currency)}
+            </span>
+          ) : (
+            <span className="text-muted-foreground text-xs">—</span>
+          )}
+        </td>
+        <td className="p-3 min-w-0">
+          <div className="flex flex-wrap gap-1">
+            {[...new Set(job.technologies.filter(Boolean))].slice(0, 2).map((tech, i) => (
+              <span key={`${tech}-${i}`} className="inline-flex items-center text-[11px] font-[family-name:var(--font-mono)] font-medium px-2 py-0.5 rounded-md bg-muted text-foreground">
+                {tech}
+              </span>
+            ))}
+            {[...new Set(job.technologies.filter(Boolean))].length > 2 && (
+              <span className="text-[11px] text-muted-foreground">+{[...new Set(job.technologies.filter(Boolean))].length - 2}</span>
+            )}
+          </div>
+        </td>
+        <td className="p-3 hidden xl:table-cell">
+          <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${modeClass}`}>
+            <span className="w-1.5 h-1.5 rounded-full bg-current" />
+            {workModeLabel(job.workMode)}
+          </span>
+        </td>
+        <td className="p-3">
+          <div className="flex flex-wrap gap-1">
+            {sourceDots.map(({ source, count }) => (
+              <span key={source} className="inline-flex items-center gap-1 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2 py-0.5 rounded-md border border-border bg-card text-muted-foreground">
+                <span className={`w-1.5 h-1.5 rounded-full ${SOURCE_MAP[source]?.color ?? 'bg-muted'}`} />
+                {SOURCE_MAP[source]?.label ?? source}
+                {count > 1 && <span className="text-[10px] text-muted-foreground/60">×{count}</span>}
+              </span>
+            ))}
+          </div>
+        </td>
+        <td className="p-3 text-xs text-muted-foreground font-[family-name:var(--font-mono)] hidden lg:table-cell">
+          {relativeTime(job.publishedAt)}
+        </td>
+      </tr>
+
+      {expanded && job.sources.map((src) => {
+        const srcInfo = SOURCE_MAP[src.source] ?? { label: src.source, color: 'bg-muted' };
+        return (
+          <tr key={src.id} className="border-b border-border last:border-b-0 bg-muted/30 hover:bg-muted/60 transition-colors">
+            <td className="p-3 pl-10" colSpan={7}>
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${srcInfo.color}`} />
+                <span className="text-[11px] font-[family-name:var(--font-mono)] font-medium text-muted-foreground">{srcInfo.label}</span>
+                <a
+                  href={src.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-muted-foreground hover:text-accent hover:underline underline-offset-2 transition-colors font-[family-name:var(--font-mono)] break-all"
+                >
+                  {src.sourceUrl ?? '—'}
+                </a>
+
+                <span className="text-[11px] text-muted-foreground font-[family-name:var(--font-mono)]">
+                  {relativeTime(src.publishedAt)}
+                </span>
+              </div>
+            </td>
+          </tr>
+        );
+      })}
+    </>
+  );
+}
+
+function FlatRow({ job }: { job: Job }) {
+  const source = SOURCE_MAP[job.source] ?? { label: job.source, color: 'bg-muted' };
+  const salary = formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency);
+  const modeClass = WORK_MODE_STYLES[job.workMode ?? ''] ?? 'bg-slate-100 text-slate-600';
+
+  return (
+    <tr className="border-b border-border last:border-b-0 hover:bg-muted/50 transition-colors">
+      <td className="p-3 min-w-0 max-w-[260px]">
+        <a
+          href={job.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-foreground hover:text-accent hover:underline underline-offset-2 transition-colors block break-words"
+        >
+          {job.title}
+        </a>
+        <div
+       className="text-xs text-muted-foreground mt-0.5 break-words"
+       title={job.company}
+     >
+       {job.company}
+     </div>
+      </td>
+      <td className="p-3 text-muted-foreground text-sm">{job.city ?? '—'}</td>
+      <td className="p-3">
+        {salary ? (
+          <span className="font-[family-name:var(--font-mono)] text-accent font-medium text-xs">{salary}</span>
+        ) : (
+          <span className="text-muted-foreground text-xs">—</span>
+        )}
+      </td>
+      <td className="p-3 min-w-0">
+        <div className="flex flex-wrap gap-1">
+          {job.technologies.slice(0, 2).map((tech) => (
+            <span key={tech} className="inline-flex items-center text-[11px] font-[family-name:var(--font-mono)] font-medium px-2 py-0.5 rounded-md bg-muted text-foreground">
+              {tech}
+            </span>
+          ))}
+          {job.technologies.length > 2 && (
+            <span className="text-[11px] text-muted-foreground">+{job.technologies.length - 2}</span>
+          )}
+        </div>
+      </td>
+      <td className="p-3 hidden xl:table-cell">
+        <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${modeClass}`}>
+          <span className="w-1.5 h-1.5 rounded-full bg-current" />
+          {workModeLabel(job.workMode)}
+        </span>
+      </td>
+      <td className="p-3">
+        <span className="inline-flex items-center gap-1 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2 py-0.5 rounded-md border border-border bg-card text-muted-foreground">
+          <span className={`w-1.5 h-1.5 rounded-full ${source.color}`} />
+          {source.label}
+        </span>
+      </td>
+      <td className="p-3 text-xs text-muted-foreground font-[family-name:var(--font-mono)] hidden lg:table-cell">
+        {relativeTime(job.publishedAt)}
+      </td>
+    </tr>
+  );
+}
+
+export function JobTable({ jobs, total, page, totalPages, onPageChange }: JobTableProps) {
+  const getPageNumbers = () => {
+    const pages: (number | '...')[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (page > 3) pages.push('...');
+      for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) {
+        pages.push(i);
+      }
+      if (page < totalPages - 2) pages.push('...');
+      pages.push(totalPages);
+    }
+    return pages;
   };
 
   return (
     <div>
-      <div className="mb-2 text-sm text-gray-600">Łącznie: {total} ofert</div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
+      <div className="border border-border rounded-lg bg-card">
+        <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-sm">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="p-3 text-left">Firma</th>
-              <th className="p-3 text-left">Tytuł</th>
-              <th className="p-3 text-left">Lokalizacja</th>
-              <th className="p-3 text-left">Zarobki</th>
-              <th className="p-3 text-left">Technologie</th>
-              <th className="p-3 text-left">Tryb</th>
-              <th className="p-3 text-left">Źródło</th>
-              <th className="p-3 text-left">Data</th>
+            <tr className="border-b border-border bg-muted">
+              <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap max-w-[260px]">Tytuł / Firma</th>
+              <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Lokalizacja</th>
+              <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Zarobki</th>
+              <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Technologie</th>
+              <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden xl:table-cell">Tryb</th>
+              <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Źródło</th>
+              <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden lg:table-cell">Data</th>
             </tr>
           </thead>
           <tbody>
-            {jobs.map((job) => (
-              <tr key={job.id} className="border-b hover:bg-gray-50">
-                <td className="p-3 font-medium">{job.company}</td>
-                <td className="p-3">
-                  <a href={job.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                    {job.title}
-                  </a>
-                </td>
-                <td className="p-3">{job.city ?? '—'}</td>
-                <td className="p-3">{formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency)}</td>
-                <td className="p-3">
-                  <div className="flex flex-wrap gap-1">
-                    {job.technologies.slice(0, 3).map((tech) => (
-                      <span key={tech} className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">
-                        {tech}
-                      </span>
-                    ))}
-                    {job.technologies.length > 3 && (
-                      <span className="text-xs text-gray-500">+{job.technologies.length - 3}</span>
-                    )}
-                  </div>
-                </td>
-                <td className="p-3">{workModeLabel(job.workMode)}</td>
-                <td className="p-3 text-sm text-gray-500">{job.source}</td>
-                <td className="p-3 text-sm text-gray-500">
-                  {job.publishedAt ? new Date(job.publishedAt).toLocaleDateString('pl-PL') : '—'}
-                </td>
-              </tr>
-            ))}
+            {jobs.map((job) =>
+              isGrouped(job) ? (
+                <GroupedRow key={job.id} job={job} />
+              ) : (
+                <FlatRow key={job.id} job={job} />
+              )
+            )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-4">
+        <div className="flex items-center justify-center gap-1 mt-4">
           <button
             onClick={() => onPageChange(page - 1)}
             disabled={page === 1}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-2.5 py-1.5 border border-border rounded-md bg-card text-foreground text-xs font-medium hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
-            Poprzednia
+            ←
           </button>
-          <span className="px-3 py-1">
-            Strona {page} z {totalPages}
-          </span>
+          {getPageNumbers().map((p, i) =>
+            p === '...' ? (
+              <span key={`dots-${i}`} className="px-1 text-muted-foreground text-xs">…</span>
+            ) : (
+              <button
+                key={p}
+                onClick={() => onPageChange(p)}
+                className={`min-w-[32px] px-2 py-1.5 border rounded-md text-xs font-medium transition-colors ${
+                  p === page
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'border-border bg-card text-foreground hover:bg-muted'
+                }`}
+              >
+                {p}
+              </button>
+            )
+          )}
           <button
             onClick={() => onPageChange(page + 1)}
             disabled={page === totalPages}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-2.5 py-1.5 border border-border rounded-md bg-card text-foreground text-xs font-medium hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
-            Następna
+            →
           </button>
         </div>
       )}

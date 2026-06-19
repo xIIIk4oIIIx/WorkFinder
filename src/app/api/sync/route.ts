@@ -1,14 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { runAllScrapers } from '@/scrapers';
 
-export async function POST(request: NextRequest) {
-  const apiKey = request.headers.get('x-api-key');
-  const expectedKey = process.env.SYNC_API_KEY;
+export const maxDuration = 120;
 
-  if (!expectedKey || apiKey !== expectedKey) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+export async function POST() {
+  try {
+    const result = await runAllScrapers();
+    return NextResponse.json(result);
+  } catch (error) {
+    return NextResponse.json({ error: String(error) }, { status: 500 });
   }
-
-  const result = await runAllScrapers();
-  return NextResponse.json(result);
 }
