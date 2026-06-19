@@ -87,11 +87,51 @@ function getSourceDots(sources: JobSource[]): { source: string; count: number }[
 
 function GroupedCard({ job }: { job: GroupedJob }) {
   const [expanded, setExpanded] = useState(false);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
   const salary = getBestSalary(job);
   const modeClass = WORK_MODE_STYLES[job.workMode ?? ''] ?? 'bg-slate-100 text-slate-600';
   const sourceDots = getSourceDots(job.sources);
   const primarySource = job.sources[0];
   const primaryUrl = primarySource?.sourceUrl ?? '#';
+
+  const fetchSummary = async () => {
+    if (summary || summaryLoading) return;
+    setSummaryLoading(true);
+    setSummaryError(null);
+    try {
+      const res = await fetch('/api/summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jobTitle: job.title,
+          company: job.company,
+          description: job.description,
+          technologies: job.technologies,
+          sourceUrl: primaryUrl,
+        }),
+      });
+      const data = await res.json();
+      if (data.summary) {
+        setSummary(data.summary);
+      } else {
+        setSummaryError(data.error || 'Nie udało się wygenerować podsumowania');
+      }
+    } catch {
+      setSummaryError('Błąd połączenia z serwerem');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
+  const handleExpand = () => {
+    const next = !expanded;
+    setExpanded(next);
+    if (next && !summary && !summaryLoading) {
+      fetchSummary();
+    }
+  };
 
   return (
     <div className="border border-border rounded-lg bg-card p-4">
@@ -108,7 +148,7 @@ function GroupedCard({ job }: { job: GroupedJob }) {
           <div className="text-xs text-muted-foreground mt-0.5 break-words">{job.company}</div>
         </div>
         <button
-          onClick={() => setExpanded(!expanded)}
+          onClick={handleExpand}
           className="w-8 h-8 flex items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors flex-shrink-0"
         >
           <svg className={`w-4 h-4 transition-transform ${expanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -143,7 +183,34 @@ function GroupedCard({ job }: { job: GroupedJob }) {
       </div>
 
       {expanded && (
-        <div className="mt-3 pt-3 border-t border-border space-y-2">
+        <div className="mt-3 pt-3 border-t border-border space-y-3">
+          {/* AI Summary Section */}
+          <div className="bg-muted/50 rounded-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <svg className="w-4 h-4 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Z" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              <span className="text-xs font-semibold text-foreground">Podsumowanie AI</span>
+            </div>
+            {summaryLoading && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                </svg>
+                Generowanie podsumowania...
+              </div>
+            )}
+            {summaryError && (
+              <div className="text-xs text-destructive">{summaryError}</div>
+            )}
+            {summary && (
+              <div className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                {summary}
+              </div>
+            )}
+          </div>
+
           {job.technologies.filter(Boolean).length > 0 && (
             <div className="flex flex-wrap gap-1">
               {job.technologies.filter(Boolean).map((tech, i) => (
@@ -233,11 +300,51 @@ function FlatCard({ job }: { job: Job }) {
 
 function GroupedRow({ job }: { job: GroupedJob }) {
   const [expanded, setExpanded] = useState(false);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
   const salary = getBestSalary(job);
   const modeClass = WORK_MODE_STYLES[job.workMode ?? ''] ?? 'bg-slate-100 text-slate-600';
   const sourceDots = getSourceDots(job.sources);
   const primarySource = job.sources[0];
   const primaryUrl = primarySource?.sourceUrl ?? '#';
+
+  const fetchSummary = async () => {
+    if (summary || summaryLoading) return;
+    setSummaryLoading(true);
+    setSummaryError(null);
+    try {
+      const res = await fetch('/api/summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jobTitle: job.title,
+          company: job.company,
+          description: job.description,
+          technologies: job.technologies,
+          sourceUrl: primaryUrl,
+        }),
+      });
+      const data = await res.json();
+      if (data.summary) {
+        setSummary(data.summary);
+      } else {
+        setSummaryError(data.error || 'Nie udało się wygenerować podsumowania');
+      }
+    } catch {
+      setSummaryError('Błąd połączenia z serwerem');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
+  const handleExpand = () => {
+    const next = !expanded;
+    setExpanded(next);
+    if (next && !summary && !summaryLoading) {
+      fetchSummary();
+    }
+  };
 
   return (
     <>
@@ -245,7 +352,7 @@ function GroupedRow({ job }: { job: GroupedJob }) {
         <td className="p-3 min-w-0 max-w-[260px]">
           <div className="flex items-start gap-2">
             <button
-              onClick={() => setExpanded(!expanded)}
+              onClick={handleExpand}
               className="mt-0.5 w-5 h-5 flex items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors flex-shrink-0"
               aria-label={expanded ? 'Zwiń' : 'Rozwiń'}
             >
@@ -320,30 +427,63 @@ function GroupedRow({ job }: { job: GroupedJob }) {
         </td>
       </tr>
 
-      {expanded && job.sources.map((src) => {
-        const srcInfo = SOURCE_MAP[src.source] ?? { label: src.source, color: 'bg-muted' };
-        return (
-          <tr key={src.id} className="border-b border-border last:border-b-0 bg-muted/30 hover:bg-muted/60 transition-colors">
+      {expanded && (
+        <>
+          <tr>
             <td className="p-3 pl-10" colSpan={7}>
-              <div className="flex items-center gap-3 flex-wrap">
-                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${srcInfo.color}`} />
-                <span className="text-[11px] font-[family-name:var(--font-mono)] font-medium text-muted-foreground">{srcInfo.label}</span>
-                <a
-                  href={src.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-muted-foreground hover:text-accent hover:underline underline-offset-2 transition-colors font-[family-name:var(--font-mono)] break-all"
-                >
-                  {src.sourceUrl ?? '—'}
-                </a>
-                <span className="text-[11px] text-muted-foreground font-[family-name:var(--font-mono)]">
-                  {relativeTime(src.publishedAt)}
-                </span>
+              <div className="bg-muted/50 rounded-lg p-3 mb-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <svg className="w-4 h-4 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Z" />
+                    <path d="M12 6v6l4 2" />
+                  </svg>
+                  <span className="text-xs font-semibold text-foreground">Podsumowanie AI</span>
+                </div>
+                {summaryLoading && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                    </svg>
+                    Generowanie podsumowania...
+                  </div>
+                )}
+                {summaryError && (
+                  <div className="text-xs text-destructive">{summaryError}</div>
+                )}
+                {summary && (
+                  <div className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                    {summary}
+                  </div>
+                )}
               </div>
             </td>
           </tr>
-        );
-      })}
+          {job.sources.map((src) => {
+            const srcInfo = SOURCE_MAP[src.source] ?? { label: src.source, color: 'bg-muted' };
+            return (
+              <tr key={src.id} className="border-b border-border last:border-b-0 bg-muted/30 hover:bg-muted/60 transition-colors">
+                <td className="p-3 pl-10" colSpan={7}>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${srcInfo.color}`} />
+                    <span className="text-[11px] font-[family-name:var(--font-mono)] font-medium text-muted-foreground">{srcInfo.label}</span>
+                    <a
+                      href={src.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-muted-foreground hover:text-accent hover:underline underline-offset-2 transition-colors font-[family-name:var(--font-mono)] break-all"
+                    >
+                      {src.sourceUrl ?? '—'}
+                    </a>
+                    <span className="text-[11px] text-muted-foreground font-[family-name:var(--font-mono)]">
+                      {relativeTime(src.publishedAt)}
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </>
+      )}
     </>
   );
 }
