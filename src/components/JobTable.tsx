@@ -149,6 +149,8 @@ function AiSummarySection({ jobTitle, company, description, technologies, source
       if (data.summary) {
         setSummary(data.summary);
         setModel(data.model || null);
+      } else if (data.errorType === 'quota_exceeded') {
+        setSummaryError(data.message || 'Limit API Gemini wyczerpany');
       } else {
         setSummaryError(data.error || 'Nie udało się wygenerować podsumowania');
       }
@@ -245,7 +247,21 @@ function AiSummarySection({ jobTitle, company, description, technologies, source
         )}
 
         {summaryError && (
-          <div className="text-xs text-destructive bg-destructive/10 rounded px-2 py-1.5">{summaryError}</div>
+          <div className="text-xs bg-destructive/10 rounded px-3 py-2 space-y-1">
+            <div className="flex items-center gap-2 text-destructive font-medium">
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" x2="12" y1="8" y2="12" />
+                <line x1="12" x2="12.01" y1="16" y2="16" />
+              </svg>
+              <span>{summaryError}</span>
+            </div>
+            {summaryError.includes('wyczerpany') && (
+              <p className="text-destructive/70 text-[11px]">
+                Limit darmowego tieru: 20 requestów/dzień. Resetuje się codziennie.
+              </p>
+            )}
+          </div>
         )}
 
         {summary && (

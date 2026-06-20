@@ -11,7 +11,13 @@ const allModels = [
 
 const workingModels: string[] = [];
 
-async function tryGenerateContent(modelName: string, prompt: string): Promise<string | null> {
+interface GenerateResult {
+  text: string | null;
+  quotaExceeded: boolean;
+  retryAfter: number | null;
+}
+
+async function tryGenerateContent(modelName: string, prompt: string): Promise<GenerateResult> {
   try {
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`,
@@ -24,12 +30,30 @@ async function tryGenerateContent(modelName: string, prompt: string): Promise<st
       }
     );
 
-    if (!response.ok) return null;
-
     const data = await response.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
+
+    if (response.status === 429) {
+      const retryAfter = data.error?.details?.find(
+        (d: { retryInfo?: { retryDelay?: string } }) => d.retryInfo?.retryDelay
+      )?.retryInfo?.retryDelay;
+      return {
+        text: null,
+        quotaExceeded: true,
+        retryAfter: retryAfter ? parseInt(retryAfter) : null,
+      };
+    }
+
+    if (!response.ok) {
+      return { text: null, quotaExceeded: false, retryAfter: null };
+    }
+
+    return {
+      text: data.candidates?.[0]?.content?.parts?.[0]?.text ?? null,
+      quotaExceeded: false,
+      retryAfter: null,
+    };
   } catch {
-    return null;
+    return { text: null, quotaExceeded: false, retryAfter: null };
   }
 }
 
@@ -153,19 +177,36 @@ export async function POST(request: NextRequest) {
   );
 
   const tryOrder = [...new Set([...workingModels, ...allModels])];
+  let lastQuotaExceeded = false;
+  let lastRetryAfter = null;
 
   for (const modelName of tryOrder) {
-    const text = await tryGenerateContent(modelName, prompt);
-    if (text) {
+    const result = await tryGenerateContent(modelName, prompt);
+
+    if (result.text) {
       if (!workingModels.includes(modelName)) {
         workingModels.push(modelName);
       }
       return NextResponse.json({
-        summary: text,
+        summary: result.text,
         model: modelName,
         scraped: scrapedContent !== null,
       });
     }
+
+    if (result.quotaExceeded) {
+      lastQuotaExceeded = true;
+      lastRetryAfter = result.retryAfter;
+    }
+  }
+
+  if (lastQuotaExceeded) {
+    return NextResponse.json({
+      error: 'Limit API Gemini wyczerpany',
+      errorType: 'quota_exceeded',
+      retryAfter: lastRetryAfter,
+      message: `Przekroczono dzienny limit darmowego tieru (20 requestów/dzień). Spróbuj ponownie jutro lub upgrade do płatnego tieru.`,
+    }, { status: 429 });
   }
 
   return NextResponse.json({ error: 'Nie udało się wygenerować podsumowania' }, { status: 500 });
