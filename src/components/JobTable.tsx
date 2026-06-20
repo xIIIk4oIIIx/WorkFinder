@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Job, GroupedJob, JobSource } from '@/types/job';
 
 interface JobTableProps {
@@ -101,36 +101,54 @@ function getSourceDots(sources: JobSource[]): { source: string; count: number }[
   return Array.from(map.entries()).map(([source, count]) => ({ source, count }));
 }
 
-function GroupedCard({ job }: { job: GroupedJob }) {
-  const [expanded, setExpanded] = useState(false);
+interface AiSummaryProps {
+  jobTitle: string;
+  company: string;
+  description: string | null;
+  technologies: string[];
+  sourceUrl: string;
+}
+
+function AiSummarySection({ jobTitle, company, description, technologies, sourceUrl }: AiSummaryProps) {
   const [summary, setSummary] = useState<string | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
-  const salary = getBestSalary(job);
-  const modeClass = WORK_MODE_STYLES[job.workMode ?? ''] ?? 'bg-slate-100 text-slate-600';
-  const sourceDots = getSourceDots(job.sources);
-  const primarySource = job.sources[0];
-  const primaryUrl = primarySource?.sourceUrl ?? '#';
+  const [model, setModel] = useState<string | null>(null);
+  const [loadStep, setLoadStep] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
-  const fetchSummary = async () => {
-    if (summary || summaryLoading) return;
+  const fetchSummary = async (force = false) => {
+    if ((!force && summary) || summaryLoading) return;
     setSummaryLoading(true);
     setSummaryError(null);
+    setLoadStep(1);
+
     try {
+      // Step 1: Scraping
+      await new Promise(r => setTimeout(r, 400));
+      setLoadStep(2);
+
       const res = await fetch('/api/summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          jobTitle: job.title,
-          company: job.company,
-          description: job.description,
-          technologies: job.technologies,
-          sourceUrl: primaryUrl,
+          jobTitle,
+          company,
+          description,
+          technologies,
+          sourceUrl,
         }),
       });
+
+      // Step 3: AI generating
+      setLoadStep(3);
+      await new Promise(r => setTimeout(r, 300));
+
       const data = await res.json();
       if (data.summary) {
         setSummary(data.summary);
+        setModel(data.model || null);
       } else {
         setSummaryError(data.error || 'Nie udało się wygenerować podsumowania');
       }
@@ -138,19 +156,128 @@ function GroupedCard({ job }: { job: GroupedJob }) {
       setSummaryError('Błąd połączenia z serwerem');
     } finally {
       setSummaryLoading(false);
+      setLoadStep(0);
     }
   };
 
-  const handleExpand = () => {
-    const next = !expanded;
-    setExpanded(next);
-    if (next && !summary && !summaryLoading) {
-      fetchSummary();
-    }
+  useEffect(() => {
+    fetchSummary();
+  }, []);
+
+  const handleCopy = async () => {
+    if (!summary) return;
+    await navigator.clipboard.writeText(summary);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
+
+  const loadSteps = [
+    'Pobieram stronę...',
+    'Analizuję treść...',
+    'Generuję podsumowanie...',
+  ];
 
   return (
-    <div className="border border-border rounded-lg bg-card p-4">
+    <div className="bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-sm hover:border-accent/30">
+      <div className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center">
+              <svg className="w-3.5 h-3.5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
+              </svg>
+            </div>
+            <span className="text-xs font-bold text-foreground uppercase tracking-wider">Podsumowanie AI</span>
+          </div>
+          <div className="flex items-center gap-1">
+            {summary && !summaryLoading && (
+              <>
+                <button
+                  onClick={handleCopy}
+                  className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:bg-accent/10 hover:text-accent transition-colors"
+                  title="Kopiuj"
+                >
+                  {copied ? (
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                  ) : (
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                    </svg>
+                  )}
+                </button>
+                <button
+                  onClick={() => fetchSummary(true)}
+                  className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:bg-accent/10 hover:text-accent transition-colors"
+                  title="Odśwież"
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                    <polyline points="21 3 21 9 15 9" />
+                  </svg>
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {summaryLoading && (
+          <div className="space-y-2 py-1">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <svg className="w-3.5 h-3.5 animate-spin text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+              </svg>
+              <span>{loadSteps[loadStep] || loadSteps[0]}</span>
+            </div>
+            <div className="flex gap-1">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
+                    i <= loadStep ? 'bg-accent' : 'bg-accent/20'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {summaryError && (
+          <div className="text-xs text-destructive bg-destructive/10 rounded px-2 py-1.5">{summaryError}</div>
+        )}
+
+        {summary && (
+          <div
+            ref={contentRef}
+            className="text-sm text-foreground/80 leading-relaxed space-y-0"
+            dangerouslySetInnerHTML={{ __html: parseMarkdown(summary) }}
+          />
+        )}
+      </div>
+
+      {summary && model && (
+        <div className="px-4 py-2 bg-accent/5 border-t border-accent/10">
+          <span className="text-[10px] text-muted-foreground/60 font-[family-name:var(--font-mono)]">
+            Wygenerowano przez {model}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GroupedCard({ job }: { job: GroupedJob }) {
+  const [expanded, setExpanded] = useState(false);
+  const salary = getBestSalary(job);
+  const modeClass = WORK_MODE_STYLES[job.workMode ?? ''] ?? 'bg-slate-100 text-slate-600';
+  const sourceDots = getSourceDots(job.sources);
+  const primarySource = job.sources[0];
+  const primaryUrl = primarySource?.sourceUrl ?? '#';
+
+  return (
+    <div className="border border-border rounded-lg bg-card p-4 transition-all duration-200 hover:shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <a
@@ -164,10 +291,10 @@ function GroupedCard({ job }: { job: GroupedJob }) {
           <div className="text-xs text-muted-foreground mt-0.5 break-words">{job.company}</div>
         </div>
         <button
-          onClick={handleExpand}
+          onClick={() => setExpanded(!expanded)}
           className="w-8 h-8 flex items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors flex-shrink-0"
         >
-          <svg className={`w-4 h-4 transition-transform ${expanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m9 18 6-6-6-6" />
           </svg>
         </button>
@@ -198,36 +325,15 @@ function GroupedCard({ job }: { job: GroupedJob }) {
         ))}
       </div>
 
-      {expanded && (
-        <div className="mt-3 pt-3 border-t border-border space-y-3">
-          {/* AI Summary Section */}
-          <div className="bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center">
-                <svg className="w-3.5 h-3.5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
-                </svg>
-              </div>
-              <span className="text-xs font-bold text-foreground uppercase tracking-wider">Podsumowanie AI</span>
-            </div>
-            {summaryLoading && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
-                <svg className="w-3.5 h-3.5 animate-spin text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                </svg>
-                <span>Analizuję ofertę...</span>
-              </div>
-            )}
-            {summaryError && (
-              <div className="text-xs text-destructive bg-destructive/10 rounded px-2 py-1.5">{summaryError}</div>
-            )}
-            {summary && (
-              <div
-                className="text-sm text-foreground/80 leading-relaxed space-y-1"
-                dangerouslySetInnerHTML={{ __html: parseMarkdown(summary) }}
-              />
-            )}
-          </div>
+      <div className={`transition-all duration-300 ease-in-out ${expanded ? 'max-h-[2000px] opacity-100 mt-3 pt-3 border-t border-border' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+        <div className="space-y-3">
+          <AiSummarySection
+            jobTitle={job.title}
+            company={job.company}
+            description={job.description}
+            technologies={job.technologies}
+            sourceUrl={primaryUrl}
+          />
 
           {job.technologies.filter(Boolean).length > 0 && (
             <div className="flex flex-wrap gap-1">
@@ -254,7 +360,7 @@ function GroupedCard({ job }: { job: GroupedJob }) {
             );
           })}
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -318,51 +424,11 @@ function FlatCard({ job }: { job: Job }) {
 
 function GroupedRow({ job }: { job: GroupedJob }) {
   const [expanded, setExpanded] = useState(false);
-  const [summary, setSummary] = useState<string | null>(null);
-  const [summaryLoading, setSummaryLoading] = useState(false);
-  const [summaryError, setSummaryError] = useState<string | null>(null);
   const salary = getBestSalary(job);
   const modeClass = WORK_MODE_STYLES[job.workMode ?? ''] ?? 'bg-slate-100 text-slate-600';
   const sourceDots = getSourceDots(job.sources);
   const primarySource = job.sources[0];
   const primaryUrl = primarySource?.sourceUrl ?? '#';
-
-  const fetchSummary = async () => {
-    if (summary || summaryLoading) return;
-    setSummaryLoading(true);
-    setSummaryError(null);
-    try {
-      const res = await fetch('/api/summary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jobTitle: job.title,
-          company: job.company,
-          description: job.description,
-          technologies: job.technologies,
-          sourceUrl: primaryUrl,
-        }),
-      });
-      const data = await res.json();
-      if (data.summary) {
-        setSummary(data.summary);
-      } else {
-        setSummaryError(data.error || 'Nie udało się wygenerować podsumowania');
-      }
-    } catch {
-      setSummaryError('Błąd połączenia z serwerem');
-    } finally {
-      setSummaryLoading(false);
-    }
-  };
-
-  const handleExpand = () => {
-    const next = !expanded;
-    setExpanded(next);
-    if (next && !summary && !summaryLoading) {
-      fetchSummary();
-    }
-  };
 
   return (
     <>
@@ -370,12 +436,12 @@ function GroupedRow({ job }: { job: GroupedJob }) {
         <td className="p-3 min-w-0 max-w-[260px]">
           <div className="flex items-start gap-2">
             <button
-              onClick={handleExpand}
+              onClick={() => setExpanded(!expanded)}
               className="mt-0.5 w-5 h-5 flex items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors flex-shrink-0"
               aria-label={expanded ? 'Zwiń' : 'Rozwiń'}
             >
               <svg
-                className={`w-3 h-3 transition-transform ${expanded ? 'rotate-90' : ''}`}
+                className={`w-3 h-3 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -445,65 +511,46 @@ function GroupedRow({ job }: { job: GroupedJob }) {
         </td>
       </tr>
 
-      {expanded && (
-        <>
-          <tr>
+      <tr className={`${expanded ? '' : 'hidden'}`}>
+        <td className="p-3 pl-10" colSpan={7}>
+          <div className={`transition-all duration-300 ease-in-out ${expanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+            <div className="space-y-3 mb-3">
+              <AiSummarySection
+                jobTitle={job.title}
+                company={job.company}
+                description={job.description}
+                technologies={job.technologies}
+                sourceUrl={primaryUrl}
+              />
+            </div>
+          </div>
+        </td>
+      </tr>
+
+      {expanded && job.sources.map((src) => {
+        const srcInfo = SOURCE_MAP[src.source] ?? { label: src.source, color: 'bg-muted' };
+        return (
+          <tr key={src.id} className="border-b border-border last:border-b-0 bg-muted/30 hover:bg-muted/60 transition-colors">
             <td className="p-3 pl-10" colSpan={7}>
-              <div className="bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 rounded-lg p-4 mb-3">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center">
-                    <svg className="w-3.5 h-3.5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-bold text-foreground uppercase tracking-wider">Podsumowanie AI</span>
-                </div>
-                {summaryLoading && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
-                    <svg className="w-3.5 h-3.5 animate-spin text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                    </svg>
-                    <span>Analizuję ofertę...</span>
-                  </div>
-                )}
-                {summaryError && (
-                  <div className="text-xs text-destructive bg-destructive/10 rounded px-2 py-1.5">{summaryError}</div>
-                )}
-                {summary && (
-                  <div
-                    className="text-sm text-foreground/80 leading-relaxed space-y-1"
-                    dangerouslySetInnerHTML={{ __html: parseMarkdown(summary) }}
-                  />
-                )}
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${srcInfo.color}`} />
+                <span className="text-[11px] font-[family-name:var(--font-mono)] font-medium text-muted-foreground">{srcInfo.label}</span>
+                <a
+                  href={src.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-muted-foreground hover:text-accent hover:underline underline-offset-2 transition-colors font-[family-name:var(--font-mono)] break-all"
+                >
+                  {src.sourceUrl ?? '—'}
+                </a>
+                <span className="text-[11px] text-muted-foreground font-[family-name:var(--font-mono)]">
+                  {relativeTime(src.publishedAt)}
+                </span>
               </div>
             </td>
           </tr>
-          {job.sources.map((src) => {
-            const srcInfo = SOURCE_MAP[src.source] ?? { label: src.source, color: 'bg-muted' };
-            return (
-              <tr key={src.id} className="border-b border-border last:border-b-0 bg-muted/30 hover:bg-muted/60 transition-colors">
-                <td className="p-3 pl-10" colSpan={7}>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${srcInfo.color}`} />
-                    <span className="text-[11px] font-[family-name:var(--font-mono)] font-medium text-muted-foreground">{srcInfo.label}</span>
-                    <a
-                      href={src.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-muted-foreground hover:text-accent hover:underline underline-offset-2 transition-colors font-[family-name:var(--font-mono)] break-all"
-                    >
-                      {src.sourceUrl ?? '—'}
-                    </a>
-                    <span className="text-[11px] text-muted-foreground font-[family-name:var(--font-mono)]">
-                      {relativeTime(src.publishedAt)}
-                    </span>
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </>
-      )}
+        );
+      })}
     </>
   );
 }
