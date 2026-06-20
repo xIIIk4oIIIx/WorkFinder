@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Job, GroupedJob, JobSource } from '@/types/job';
 
 interface JobTableProps {
@@ -26,6 +26,28 @@ const WORK_MODE_STYLES: Record<string, string> = {
   office: 'bg-slate-100 text-slate-600',
   hybrid: 'bg-amber-100 text-amber-700',
 };
+
+// Favorites helpers
+function getFavorites(): Set<string> {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const stored = localStorage.getItem('workfinder-favorites');
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function toggleFavorite(jobId: string): Set<string> {
+  const favorites = getFavorites();
+  if (favorites.has(jobId)) {
+    favorites.delete(jobId);
+  } else {
+    favorites.add(jobId);
+  }
+  localStorage.setItem('workfinder-favorites', JSON.stringify([...favorites]));
+  return favorites;
+}
 
 function parseMarkdown(text: string): string {
   return text
@@ -339,11 +361,21 @@ function AiSummarySection({ jobTitle, company, description, technologies, source
 function GroupedCard({ job }: { job: GroupedJob }) {
   const [expanded, setExpanded] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
   const salary = getBestSalary(job);
   const modeClass = WORK_MODE_STYLES[job.workMode ?? ''] ?? 'bg-slate-100 text-slate-600';
   const sourceDots = getSourceDots(job.sources);
   const primarySource = job.sources[0];
   const primaryUrl = primarySource?.sourceUrl ?? '#';
+
+  useEffect(() => {
+    setIsFavorite(getFavorites().has(job.id));
+  }, [job.id]);
+
+  const handleFavoriteToggle = () => {
+    const newFavorites = toggleFavorite(job.id);
+    setIsFavorite(newFavorites.has(job.id));
+  };
 
   return (
     <div className="border border-border rounded-lg bg-card p-4 transition-all duration-200 hover:shadow-sm">
@@ -360,6 +392,19 @@ function GroupedCard({ job }: { job: GroupedJob }) {
           <div className="text-xs text-muted-foreground mt-0.5 break-words">{job.company}</div>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
+          <button
+            onClick={handleFavoriteToggle}
+            className={`w-8 h-8 flex items-center justify-center rounded border transition-colors ${
+              isFavorite
+                ? 'border-rose-300 bg-rose-50 text-rose-500'
+                : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+            }`}
+            title={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+            </svg>
+          </button>
           <button
             onClick={() => setShowSummary(!showSummary)}
             className={`w-8 h-8 flex items-center justify-center rounded border transition-colors ${
@@ -454,22 +499,47 @@ function GroupedCard({ job }: { job: GroupedJob }) {
 }
 
 function FlatCard({ job }: { job: Job }) {
+  const [isFavorite, setIsFavorite] = useState(false);
   const source = SOURCE_MAP[job.source] ?? { label: job.source, color: 'bg-muted' };
   const salary = formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency);
   const modeClass = WORK_MODE_STYLES[job.workMode ?? ''] ?? 'bg-slate-100 text-slate-600';
 
+  useEffect(() => {
+    setIsFavorite(getFavorites().has(job.id));
+  }, [job.id]);
+
+  const handleFavoriteToggle = () => {
+    const newFavorites = toggleFavorite(job.id);
+    setIsFavorite(newFavorites.has(job.id));
+  };
+
   return (
     <div className="border border-border rounded-lg bg-card p-4">
-      <div className="min-w-0">
-        <a
-          href={job.sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-semibold text-foreground hover:text-accent hover:underline underline-offset-2 transition-colors block text-sm leading-snug break-words"
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <a
+            href={job.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-foreground hover:text-accent hover:underline underline-offset-2 transition-colors block text-sm leading-snug break-words"
+          >
+            {job.title}
+          </a>
+          <div className="text-xs text-muted-foreground mt-0.5 break-words">{job.company}</div>
+        </div>
+        <button
+          onClick={handleFavoriteToggle}
+          className={`w-8 h-8 flex items-center justify-center rounded border transition-colors flex-shrink-0 ${
+            isFavorite
+              ? 'border-rose-300 bg-rose-50 text-rose-500'
+              : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+          }`}
+          title={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
         >
-          {job.title}
-        </a>
-        <div className="text-xs text-muted-foreground mt-0.5 break-words">{job.company}</div>
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+          </svg>
+        </button>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -512,17 +582,40 @@ function FlatCard({ job }: { job: Job }) {
 
 function GroupedRow({ job }: { job: GroupedJob }) {
   const [expanded, setExpanded] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
   const salary = getBestSalary(job);
   const modeClass = WORK_MODE_STYLES[job.workMode ?? ''] ?? 'bg-slate-100 text-slate-600';
   const sourceDots = getSourceDots(job.sources);
   const primarySource = job.sources[0];
   const primaryUrl = primarySource?.sourceUrl ?? '#';
 
+  useEffect(() => {
+    setIsFavorite(getFavorites().has(job.id));
+  }, [job.id]);
+
+  const handleFavoriteToggle = () => {
+    const newFavorites = toggleFavorite(job.id);
+    setIsFavorite(newFavorites.has(job.id));
+  };
+
   return (
     <>
       <tr className="border-b border-border hover:bg-muted/50 transition-colors group">
         <td className="p-3 min-w-0 max-w-[260px]">
           <div className="flex items-start gap-2">
+            <button
+              onClick={handleFavoriteToggle}
+              className={`mt-0.5 w-5 h-5 flex items-center justify-center rounded border transition-colors flex-shrink-0 ${
+                isFavorite
+                  ? 'border-rose-300 bg-rose-50 text-rose-500'
+                  : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+              title={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
+            >
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+              </svg>
+            </button>
             <button
               onClick={() => setExpanded(!expanded)}
               className="mt-0.5 w-5 h-5 flex items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors flex-shrink-0"
