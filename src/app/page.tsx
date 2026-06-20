@@ -7,8 +7,20 @@ import { JobTable } from '@/components/JobTable';
 import { Button } from '@/components/ui/button';
 import type { Job, GroupedJob } from '@/types/job';
 
+// Favorites helpers (same as in JobTable)
+function getFavorites(): Set<string> {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const stored = localStorage.getItem('workfinder-favorites');
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
 export default function Home() {
   const [jobs, setJobs] = useState<(Job | GroupedJob)[]>([]);
+  const [allJobs, setAllJobs] = useState<(Job | GroupedJob)[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -28,6 +40,22 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<{ total: number; bySource: { source: string; count: number }[]; lastSync: string | null; todayNew: number } | null>(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+
+  // Load favorites on mount
+  useEffect(() => {
+    setFavorites(getFavorites());
+  }, []);
+
+  // Update favorites when storage changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setFavorites(getFavorites());
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   const fetchJobs = useCallback(async () => {
     setLoading(true);
@@ -50,7 +78,7 @@ export default function Home() {
       const res = await fetch(`/api/jobs?${params.toString()}`);
       if (!res.ok) throw new Error(`Błąd serwera: ${res.status}`);
       const data = await res.json();
-      setJobs(data.jobs);
+      setAllJobs(data.jobs);
       setTotal(data.pagination.total);
       setTotalPages(data.pagination.totalPages);
     } catch (e) {
@@ -103,6 +131,18 @@ export default function Home() {
     await fetchStats();
     setSyncing(false);
   };
+
+  // Filter jobs based on favorites
+  useEffect(() => {
+    if (showFavoritesOnly) {
+      const filtered = allJobs.filter(job => favorites.has(job.id));
+      setJobs(filtered);
+      setTotal(filtered.length);
+      setTotalPages(1);
+    } else {
+      setJobs(allJobs);
+    }
+  }, [showFavoritesOnly, allJobs, favorites]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -176,6 +216,24 @@ export default function Home() {
                   <line x1="18" x2="22" y1="16" y2="16" />
                 </svg>
                 Filtry
+              </button>
+              <button
+                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                className={`flex items-center gap-2 px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
+                  showFavoritesOnly
+                    ? 'border-rose-300 bg-rose-50 text-rose-600'
+                    : 'border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill={showFavoritesOnly ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                </svg>
+                <span className="hidden sm:inline">Ulubione</span>
+                {favorites.size > 0 && (
+                  <span className="text-[10px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded-full font-medium">
+                    {favorites.size}
+                  </span>
+                )}
               </button>
               <div className="flex-1">
                 <SearchBar onSearch={handleSearch} />
