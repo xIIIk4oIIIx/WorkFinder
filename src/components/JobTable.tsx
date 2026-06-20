@@ -30,15 +30,15 @@ const WORK_MODE_STYLES: Record<string, string> = {
 function parseMarkdown(text: string): string {
   return text
     // Headers ### → <h3>
-    .replace(/^### (.+)$/gm, '<h3 class="text-sm font-semibold text-foreground mt-2 mb-1">$1</h3>')
+    .replace(/^### (.+)$/gm, '<h3 class="text-sm font-bold text-foreground mt-3 mb-1.5 flex items-center gap-1.5">$1</h3>')
     // Bold **text** → <strong>
-    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground">$1</strong>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>')
     // Italic *text* → <em>
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/\*(.+?)\*/g, '<em class="text-muted-foreground/80">$1</em>')
     // List items * → <li>
-    .replace(/^\* (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
+    .replace(/^\* (.+)$/gm, '<li class="ml-4 list-disc text-foreground/90 leading-relaxed">$1</li>')
     // Wrap consecutive <li> in <ul>
-    .replace(/((?:<li[^>]*>.*?<\/li>\n?)+)/g, '<ul class="my-1">$1</ul>')
+    .replace(/((?:<li[^>]*>.*?<\/li>\n?)+)/g, '<ul class="my-1.5 space-y-0.5">$1</ul>')
     // Line breaks
     .replace(/\n/g, '<br />');
 }
@@ -201,28 +201,29 @@ function GroupedCard({ job }: { job: GroupedJob }) {
       {expanded && (
         <div className="mt-3 pt-3 border-t border-border space-y-3">
           {/* AI Summary Section */}
-          <div className="bg-muted/50 rounded-lg p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <svg className="w-4 h-4 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Z" />
-                <path d="M12 6v6l4 2" />
-              </svg>
-              <span className="text-xs font-semibold text-foreground">Podsumowanie AI</span>
+          <div className="bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center">
+                <svg className="w-3.5 h-3.5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
+                </svg>
+              </div>
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider">Podsumowanie AI</span>
             </div>
             {summaryLoading && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+                <svg className="w-3.5 h-3.5 animate-spin text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                 </svg>
-                Generowanie podsumowania...
+                <span>Analizuję ofertę...</span>
               </div>
             )}
             {summaryError && (
-              <div className="text-xs text-destructive">{summaryError}</div>
+              <div className="text-xs text-destructive bg-destructive/10 rounded px-2 py-1.5">{summaryError}</div>
             )}
             {summary && (
               <div
-                className="text-xs text-muted-foreground leading-relaxed"
+                className="text-sm text-foreground/80 leading-relaxed space-y-1"
                 dangerouslySetInnerHTML={{ __html: parseMarkdown(summary) }}
               />
             )}
@@ -448,28 +449,29 @@ function GroupedRow({ job }: { job: GroupedJob }) {
         <>
           <tr>
             <td className="p-3 pl-10" colSpan={7}>
-              <div className="bg-muted/50 rounded-lg p-3 mb-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <svg className="w-4 h-4 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Z" />
-                    <path d="M12 6v6l4 2" />
-                  </svg>
-                  <span className="text-xs font-semibold text-foreground">Podsumowanie AI</span>
+              <div className="bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 rounded-lg p-4 mb-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center">
+                    <svg className="w-3.5 h-3.5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
+                    </svg>
+                  </div>
+                  <span className="text-xs font-bold text-foreground uppercase tracking-wider">Podsumowanie AI</span>
                 </div>
                 {summaryLoading && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+                    <svg className="w-3.5 h-3.5 animate-spin text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                     </svg>
-                    Generowanie podsumowania...
+                    <span>Analizuję ofertę...</span>
                   </div>
                 )}
                 {summaryError && (
-                  <div className="text-xs text-destructive">{summaryError}</div>
+                  <div className="text-xs text-destructive bg-destructive/10 rounded px-2 py-1.5">{summaryError}</div>
                 )}
                 {summary && (
                   <div
-                    className="text-xs text-muted-foreground leading-relaxed"
+                    className="text-sm text-foreground/80 leading-relaxed space-y-1"
                     dangerouslySetInnerHTML={{ __html: parseMarkdown(summary) }}
                   />
                 )}
