@@ -122,12 +122,11 @@ function AiSummarySection({ jobTitle, company, description, technologies, source
     if ((!force && summary) || summaryLoading) return;
     setSummaryLoading(true);
     setSummaryError(null);
-    setLoadStep(1);
+    setLoadStep(0);
 
     try {
       // Step 1: Scraping
-      await new Promise(r => setTimeout(r, 400));
-      setLoadStep(2);
+      setLoadStep(1);
 
       const res = await fetch('/api/summary', {
         method: 'POST',
@@ -141,11 +140,14 @@ function AiSummarySection({ jobTitle, company, description, technologies, source
         }),
       });
 
-      // Step 3: AI generating
-      setLoadStep(3);
-      await new Promise(r => setTimeout(r, 300));
+      // Step 2: AI generating (received response from scraping, now parsing)
+      setLoadStep(2);
 
       const data = await res.json();
+
+      // Step 3: Done
+      setLoadStep(3);
+
       if (data.summary) {
         setSummary(data.summary);
         setModel(data.model || null);
@@ -158,7 +160,7 @@ function AiSummarySection({ jobTitle, company, description, technologies, source
       setSummaryError('Błąd połączenia z serwerem');
     } finally {
       setSummaryLoading(false);
-      setLoadStep(0);
+      setTimeout(() => setLoadStep(0), 500);
     }
   };
 
