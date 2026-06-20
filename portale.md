@@ -57,7 +57,7 @@
 - `justjoin.ts` — JustJoin HTML + RSC parsing
 - `rocketjobs.ts` — RocketJobs HTML + RSC parsing
 - `jooble.ts` — Jooble API (POST, free tier)
-- `adzuna.ts` — Adzuna REST API (requires free API key: ADZUNA_APP_ID + ADZUNA_APP_KEY)
+- `pracuj.ts` — Pracuj.pl via Playwright (headless Chromium, Cloudflare bypass)
 
 ---
 **Uwaga dla agenta:** Portale takie jak Jooble, Jobrapido i Careerjet są agregatorami – zbierają oferty z innych serwisów (warto uwzględnić to przy scrapowaniu, aby uniknąć duplikatów).

@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "WorkFinder — Moodboard obecnego stanu",
+  "entry": "workfinder-moodboard.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-06-19T11:24:16.067Z",
+  "updatedAt": "2026-06-19T11:24:16.089Z",
+  "metadata": {
+    "identifier": "workfinder-moodboard",
+    "artifactType": "text/html",
+    "inferred": false
+  }
+}

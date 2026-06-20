@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WorkFinder — Moodboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --fg: #0a0a0a;
+    --muted: #f5f5f5;
+    --muted-fg: #737373;
+    --border: #e5e5e5;
+    --primary: #171717;
+    --primary-fg: #fafafa;
+    --destructive: #c43d3d;
+    --accent: #f5f5f5;
+    --radius: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .moodboard {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 48px 32px 80px;
+  }
+
+  /* ── Header ── */
+  .mb-header {
+    margin-bottom: 56px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+  }
+  .mb-header h1 {
+    font-family: 'Geist', 'Inter', sans-serif;
+    font-size: 42px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 6px;
+  }
+  .mb-header .subtitle {
+    font-size: 15px;
+    color: var(--muted-fg);
+    font-weight: 400;
+  }
+  .mb-header .meta {
+    margin-top: 16px;
+    display: flex;
+    gap: 24px;
+    font-size: 13px;
+    color: var(--muted-fg);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .mb-header .meta span { display: flex; align-items: center; gap: 6px; }
+  .mb-header .meta .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: inline-block;
+  }
+
+  /* ── Section ── */
+  .mb-section {
+    margin-bottom: 56px;
+  }
+  .mb-section-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted-fg);
+    margin-bottom: 20px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── Palette ── */
+  .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+  .swatch {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .swatch-color {
+    height: 80px;
+    display: flex;
+    align-items: flex-end;
+    padding: 8px 10px;
+  }
+  .swatch-color span {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 4px;
+    backdrop-filter: blur(4px);
+  }
+  .swatch-info {
+    padding: 10px;
+    background: var(--surface);
+  }
+  .swatch-info .name {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .swatch-info .token {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--muted-fg);
+  }
+
+  /* ── Typography ── */
+  .type-specimen {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    margin-bottom: 16px;
+    background: var(--surface);
+  }
+  .type-specimen .label {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--muted-fg);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+  }
+  .type-specimen .sample-heading {
+    font-family: 'Geist', 'Inter', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+    line-height: 1.15;
+  }
+  .type-specimen .sample-body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-weight: 400;
+    color: var(--muted-fg);
+    line-height: 1.6;
+  }
+  .type-specimen .sample-mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 400;
+    color: var(--muted-fg);
+    line-height: 1.6;
+  }
+  .type-specimen .size-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--muted-fg);
+    background: var(--muted);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-top: 8px;
+  }
+  .type-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* ── Components ── */
+  .comp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .comp-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .comp-card-header {
+    padding: 12px 16px;
+    background: var(--muted);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    color: var(--muted-fg);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .comp-card-body {
+    padding: 20px;
+    background: var(--surface);
+  }
+
+  /* ── Button demo ── */
+  .btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 12px;
+    padding: 8px 16px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 120ms ease;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: var(--primary-fg);
+  }
+  .btn-primary:hover { background: #262626; }
+  .btn-outline {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--fg);
+  }
+  .btn-outline:hover { background: var(--muted); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--fg);
+  }
+  .btn-ghost:hover { background: var(--muted); }
+  .btn-destructive {
+    background: #c43d3d1a;
+    color: var(--destructive);
+  }
+  .btn-destructive:hover { background: #c43d3d2e; }
+  .btn-secondary {
+    background: var(--muted);
+    color: var(--fg);
+  }
+  .btn-secondary:hover { background: #ebebeb; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 10px; }
+  .btn-lg { padding: 10px 20px; font-size: 14px; border-radius: 14px; }
+  .btn-icon {
+    width: 32px; height: 32px; padding: 0; border-radius: 10px;
+  }
+
+  /* ── Input demo ── */
+  .input-demo {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .input-field {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--fg);
+    outline: none;
+    transition: border-color 120ms, box-shadow 120ms;
+    width: 100%;
+  }
+  .input-field::placeholder { color: var(--muted-fg); }
+  .input-field:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(23,23,23,0.08);
+  }
+  .input-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--fg);
+  }
+  .input-group { display: flex; flex-direction: column; gap: 4px; }
+
+  /* ── Select demo ── */
+  .select-field {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--fg);
+    outline: none;
+    width: 100%;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
+  }
+
+  /* ── Checkbox demo ── */
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .checkbox-row input[type="checkbox"] {
+    width: 16px; height: 16px;
+    accent-color: var(--primary);
+    border-radius: 4px;
+  }
+
+  /* ── Table demo ── */
+  .table-demo {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .table-demo table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .table-demo th {
+    background: var(--muted);
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--muted-fg);
+    border-bottom: 1px solid var(--border);
+  }
+  .table-demo td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .table-demo tr:last-child td { border-bottom: none; }
+  .table-demo tr:hover td { background: var(--muted); }
+  .table-demo .link {
+    color: var(--fg);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .table-demo .link:hover { color: #404040; }
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: rgba(23,23,23,0.06);
+    color: var(--fg);
+    font-weight: 500;
+  }
+  .tag-count {
+    font-size: 11px;
+    color: var(--muted-fg);
+  }
+  .text-muted { color: var(--muted-fg); }
+  .text-sm { font-size: 12px; }
+  .font-medium { font-weight: 500; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* ── Spacing / Radius ── */
+  .token-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+  }
+  .token-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    background: var(--surface);
+    text-align: center;
+  }
+  .token-card .visual {
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+  }
+  .radius-box {
+    width: 48px; height: 48px;
+    background: var(--muted);
+    border: 2px solid var(--primary);
+  }
+  .shadow-box {
+    width: 48px; height: 48px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .token-card .token-name {
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  .token-card .token-value {
+    font-size: 11px;
+    color: var(--muted-fg);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── Layout ── */
+  .layout-demo {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    background: var(--muted);
+  }
+  .layout-box {
+    display: flex;
+    gap: 16px;
+  }
+  .layout-sidebar {
+    width: 200px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .layout-main {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .layout-placeholder {
+    height: 12px;
+    background: var(--muted);
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+  .layout-placeholder:last-child { margin-bottom: 0; }
+  .layout-placeholder.short { width: 60%; }
+  .layout-placeholder.medium { width: 80%; }
+  .layout-placeholder.full { width: 100%; }
+
+  /* ── Stats strip ── */
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .stat-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    background: var(--surface);
+    text-align: center;
+  }
+  .stat-card .stat-value {
+    font-family: 'Geist', 'Inter', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+  .stat-card .stat-label {
+    font-size: 12px;
+    color: var(--muted-fg);
+    font-weight: 500;
+  }
+
+  /* ── Tech pills ── */
+  .pills-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .pill {
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(23,23,23,0.06);
+    color: var(--fg);
+    font-weight: 500;
+  }
+
+  /* ── Footer ── */
+  .mb-footer {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted-fg);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  @media (max-width: 768px) {
+    .moodboard { padding: 24px 16px 48px; }
+    .mb-header h1 { font-size: 28px; }
+    .type-row { grid-template-columns: 1fr; }
+    .stats-strip { grid-template-columns: repeat(2, 1fr); }
+    .layout-box { flex-direction: column; }
+    .layout-sidebar { width: 100%; }
+    .mb-header .meta { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+<div class="moodboard">
+
+  <!-- Header -->
+  <div class="mb-header">
+    <h1>WorkFinder</h1>
+    <div class="subtitle">Moodboard — obecny stan aplikacji</div>
+    <div class="meta">
+      <span><span class="dot"></span>Next.js 16 · React 19</span>
+      <span><span class="dot"></span>Tailwind CSS 4</span>
+      <span><span class="dot"></span>shadcn/ui</span>
+      <span><span class="dot"></span>Prisma 7</span>
+      <span><span class="dot"></span>TypeScript 5</span>
+    </div>
+  </div>
+
+  <!-- Palette -->
+  <div class="mb-section">
+    <div class="mb-section-label">Paleta kolorów</div>
+    <div class="palette-grid">
+      <div class="swatch">
+        <div class="swatch-color" style="background:#ffffff; border-bottom: 1px solid #e5e5e5;"><span style="background:#e5e5e5; color:#0a0a0a;">#ffffff</span></div>
+        <div class="swatch-info"><div class="name">Background</div><div class="token">--background</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#ffffff;"><span style="background:#e5e5e5; color:#0a0a0a;">#ffffff</span></div>
+        <div class="swatch-info"><div class="name">Surface / Card</div><div class="token">--card</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#171717;"><span style="background:rgba(255,255,255,0.15); color:#fafafa;">#171717</span></div>
+        <div class="swatch-info"><div class="name">Primary</div><div class="token">--primary</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#fafafa;"><span style="background:#e5e5e5; color:#0a0a0a;">#fafafa</span></div>
+        <div class="swatch-info"><div class="name">Primary FG</div><div class="token">--primary-foreground</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#f5f5f5;"><span style="background:#e5e5e5; color:#0a0a0a;">#f5f5f5</span></div>
+        <div class="swatch-info"><div class="name">Secondary / Muted</div><div class="token">--secondary / --muted</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#737373;"><span style="background:rgba(0,0,0,0.3); color:#ffffff;">#737373</span></div>
+        <div class="swatch-info"><div class="name">Muted FG</div><div class="token">--muted-foreground</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#e5e5e5;"><span style="background:#ffffff; color:#0a0a0a;">#e5e5e5</span></div>
+        <div class="swatch-info"><div class="name">Border / Input</div><div class="token">--border / --input</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#c43d3d;"><span style="background:rgba(0,0,0,0.3); color:#ffffff;">#c43d3d</span></div>
+        <div class="swatch-info"><div class="name">Destructive</div><div class="token">--destructive</div></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#b3b3b3;"><span style="background:rgba(0,0,0,0.3); color:#ffffff;">#b3b3b3</span></div>
+        <div class="swatch-info"><div class="name">Ring</div><div class="token">--ring</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Typography -->
+  <div class="mb-section">
+    <div class="mb-section-label">Typografia</div>
+
+    <div class="type-specimen">
+      <div class="label">Display — Geist Sans</div>
+      <div class="sample-heading" style="font-size: 42px;">WorkFinder</div>
+      <div class="sample-heading" style="font-size: 30px;">Agregator ofert pracy</div>
+      <div class="sample-heading" style="font-size: 22px;">Senior React Developer</div>
+      <div class="size-tag">font-family: Geist · weight: 700 · tracking: -0.03em</div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-specimen">
+        <div class="label">Body — Inter</div>
+        <div class="sample-body" style="font-size: 15px;">
+          WorkFinder agreguje oferty pracy z popularnych portali IT w jednym miejscu. Przeglądaj, filtruj i porównuj oferty z kilku źródeł jednocześnie.
+        </div>
+        <div class="sample-body" style="font-size: 13px; margin-top: 8px;">
+          Łącznie: 247 ofert · Strona 1 z 10 · Szukaj ofert pracy...
+        </div>
+        <div class="size-tag">font-family: Inter · 13–15px · weight: 400</div>
+      </div>
+      <div class="type-specimen">
+        <div class="label">Mono — JetBrains Mono</div>
+        <div class="sample-mono" style="font-size: 13px;">
+          nofluffjobs · bulldogjob · olx<br>
+          Strona 1 z 10 · 247 ofert
+        </div>
+        <div class="sample-mono" style="font-size: 11px; margin-top: 8px;">
+          --primary: oklch(0.205 0 0)<br>
+          --radius: 0.625rem
+        </div>
+        <div class="size-tag">font-family: JetBrains Mono · 11–13px · metadata & labels</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Components: Buttons -->
+  <div class="mb-section">
+    <div class="mb-section-label">Komponenty — Button</div>
+    <div class="comp-grid">
+      <div class="comp-card">
+        <div class="comp-card-header">Warianty</div>
+        <div class="comp-card-body">
+          <div class="btn-row">
+            <button class="btn btn-primary">Odśwież dane</button>
+            <button class="btn btn-outline">Anuluj</button>
+            <button class="btn btn-secondary">Zapisz</button>
+            <button class="btn btn-ghost">Usuń</button>
+            <button class="btn btn-destructive">Usuń ofertę</button>
+          </div>
+        </div>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header">Rozmiary</div>
+        <div class="comp-card-body">
+          <div class="btn-row">
+            <button class="btn btn-primary btn-sm">Small</button>
+            <button class="btn btn-primary">Default</button>
+            <button class="btn btn-primary btn-lg">Large</button>
+            <button class="btn btn-primary btn-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Components: Inputs -->
+  <div class="mb-section">
+    <div class="mb-section-label">Komponenty — Formularze</div>
+    <div class="comp-grid">
+      <div class="comp-card">
+        <div class="comp-card-header">Text Input</div>
+        <div class="comp-card-body">
+          <div class="input-demo">
+            <div class="input-group">
+              <label class="input-label">Miasto</label>
+              <input class="input-field" type="text" placeholder="np. Warszawa">
+            </div>
+            <div class="input-group">
+              <label class="input-label">Technologia</label>
+              <input class="input-field" type="text" placeholder="np. React">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header">Select</div>
+        <div class="comp-card-body">
+          <div class="input-demo">
+            <div class="input-group">
+              <label class="input-label">Tryb pracy</label>
+              <select class="select-field">
+                <option>Wszystkie</option>
+                <option>Zdalnie</option>
+                <option>Stacjonarnie</option>
+                <option>Hybrydowo</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label class="input-label">Źródła ofert</label>
+              <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
+                <label class="checkbox-row"><input type="checkbox" checked> NoFluffJobs</label>
+                <label class="checkbox-row"><input type="checkbox" checked> BulldogJob</label>
+                <label class="checkbox-row"><input type="checkbox" checked> OLX</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header">Search Bar</div>
+        <div class="comp-card-body">
+          <div style="display: flex; gap: 8px;">
+            <input class="input-field" type="text" placeholder="Szukaj ofert pracy..." style="flex: 1;">
+            <button class="btn btn-primary">Szukaj</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Components: Table -->
+  <div class="mb-section">
+    <div class="mb-section-label">Komponenty — Tabela ofert</div>
+    <div class="table-demo">
+      <table>
+        <thead>
+          <tr>
+            <th>Firma</th>
+            <th>Tytuł</th>
+            <th>Lokalizacja</th>
+            <th>Zarobki</th>
+            <th>Technologie</th>
+            <th>Tryb</th>
+            <th>Źródło</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="font-medium">mBank</td>
+            <td><a href="#" class="link">Senior React Developer</a></td>
+            <td>Warszawa</td>
+            <td class="text-muted">18 000 – 25 000 PLN</td>
+            <td><span class="tag">React</span> <span class="tag">TypeScript</span> <span class="tag-count">+2</span></td>
+            <td class="text-muted">Zdalnie</td>
+            <td class="text-sm text-muted mono">nofluffjobs</td>
+          </tr>
+          <tr>
+            <td class="font-medium">Allegro</td>
+            <td><a href="#" class="link">Backend Developer (Java)</a></td>
+            <td>Poznań</td>
+            <td class="text-muted">20 000 – 28 000 PLN</td>
+            <td><span class="tag">Java</span> <span class="tag">Spring</span> <span class="tag-count">+1</span></td>
+            <td class="text-muted">Hybrydowo</td>
+            <td class="text-sm text-muted mono">bulldogjob</td>
+          </tr>
+          <tr>
+            <td class="font-medium">CD Projekt</td>
+            <td><a href="#" class="link">Gameplay Programmer</a></td>
+            <td>Warszawa</td>
+            <td class="text-muted">Brak danych</td>
+            <td><span class="tag">C++</span> <span class="tag">Unreal</span></td>
+            <td class="text-muted">Stacjonarnie</td>
+            <td class="text-sm text-muted mono">olx</td>
+          </tr>
+          <tr>
+            <td class="font-medium">ING Bank</td>
+            <td><a href="#" class="link">DevOps Engineer</a></td>
+            <td>Łódź</td>
+            <td class="text-muted">16 000 – 22 000 PLN</td>
+            <td><span class="tag">AWS</span> <span class="tag">K8s</span> <span class="tag">Terraform</span></td>
+            <td class="text-muted">Zdalnie</td>
+            <td class="text-sm text-muted mono">nofluffjobs</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Design Tokens -->
+  <div class="mb-section">
+    <div class="mb-section-label">Tokeny design — Border radius</div>
+    <div class="token-grid">
+      <div class="token-card">
+        <div class="visual"><div class="radius-box" style="border-radius: 4px;"></div></div>
+        <div class="token-name">sm</div>
+        <div class="token-value">0.375rem</div>
+      </div>
+      <div class="token-card">
+        <div class="visual"><div class="radius-box" style="border-radius: 6px;"></div></div>
+        <div class="token-name">md</div>
+        <div class="token-value">0.5rem</div>
+      </div>
+      <div class="token-card">
+        <div class="visual"><div class="radius-box" style="border-radius: 10px;"></div></div>
+        <div class="token-name">lg</div>
+        <div class="token-value">0.625rem</div>
+      </div>
+      <div class="token-card">
+        <div class="visual"><div class="radius-box" style="border-radius: 14px;"></div></div>
+        <div class="token-name">xl</div>
+        <div class="token-value">0.875rem</div>
+      </div>
+      <div class="token-card">
+        <div class="visual"><div class="radius-box" style="border-radius: 16px;"></div></div>
+        <div class="token-name">2xl</div>
+        <div class="token-value">1.125rem</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layout Structure -->
+  <div class="mb-section">
+    <div class="mb-section-label">Struktura layoutu</div>
+    <div class="layout-demo">
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <!-- Header -->
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;">
+          <div class="layout-placeholder short" style="height: 16px; margin: 0;"></div>
+          <div class="layout-placeholder" style="height: 28px; width: 100px; margin: 0; background: var(--primary); border-radius: 10px;"></div>
+        </div>
+        <!-- Search -->
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 20px; display: flex; gap: 8px;">
+          <div class="layout-placeholder full" style="height: 32px; margin: 0; flex: 1;"></div>
+          <div style="width: 70px; height: 32px; background: var(--primary); border-radius: 10px; flex-shrink: 0;"></div>
+        </div>
+        <!-- Content -->
+        <div class="layout-box">
+          <div class="layout-sidebar">
+            <div class="layout-placeholder short" style="height: 14px;"></div>
+            <div class="layout-placeholder full" style="height: 28px;"></div>
+            <div class="layout-placeholder full" style="height: 28px;"></div>
+            <div class="layout-placeholder medium" style="height: 28px;"></div>
+            <div class="layout-placeholder full" style="height: 28px;"></div>
+          </div>
+          <div class="layout-main">
+            <div class="layout-placeholder short" style="height: 10px; margin-bottom: 12px;"></div>
+            <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+              <div style="flex:1; height: 28px; background: var(--muted); border-radius: 4px;"></div>
+              <div style="flex:2; height: 28px; background: var(--muted); border-radius: 4px;"></div>
+              <div style="flex:1; height: 28px; background: var(--muted); border-radius: 4px;"></div>
+            </div>
+            <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+              <div style="flex:1; height: 28px; background: var(--muted); border-radius: 4px;"></div>
+              <div style="flex:2; height: 28px; background: var(--muted); border-radius: 4px;"></div>
+              <div style="flex:1; height: 28px; background: var(--muted); border-radius: 4px;"></div>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <div style="flex:1; height: 28px; background: var(--muted); border-radius: 4px;"></div>
+              <div style="flex:2; height: 28px; background: var(--muted); border-radius: 4px;"></div>
+              <div style="flex:1; height: 28px; background: var(--muted); border-radius: 4px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="mb-section">
+    <div class="mb-section-label">Komponenty — Karty statystyk</div>
+    <div class="stats-strip">
+      <div class="stat-card">
+        <div class="stat-value">247</div>
+        <div class="stat-label">Ofert łącznie</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">3</div>
+        <div class="stat-label">Źródła</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">12</div>
+        <div class="stat-label">Miast</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">45</div>
+        <div class="stat-label">Firm</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tech pills -->
+  <div class="mb-section">
+    <div class="mb-section-label">Tagi technologii — przykłady</div>
+    <div class="pills-row">
+      <span class="pill">React</span>
+      <span class="pill">TypeScript</span>
+      <span class="pill">Next.js</span>
+      <span class="pill">Node.js</span>
+      <span class="pill">Java</span>
+      <span class="pill">Spring</span>
+      <span class="pill">Python</span>
+      <span class="pill">C++</span>
+      <span class="pill">AWS</span>
+      <span class="pill">Kubernetes</span>
+      <span class="pill">Docker</span>
+      <span class="pill">PostgreSQL</span>
+      <span class="pill">Redis</span>
+      <span class="pill">Go</span>
+      <span class="pill">Rust</span>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="mb-footer">
+    <span>WorkFinder moodboard · obecny stan</span>
+    <span class="mono">19 czerwca 2026</span>
+  </div>
+
+</div>
+</body>
+</html>
