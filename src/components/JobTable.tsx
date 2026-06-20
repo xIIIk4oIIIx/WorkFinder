@@ -201,10 +201,6 @@ function AiSummarySection({ jobTitle, company, description, technologies, source
     }
   };
 
-  useEffect(() => {
-    fetchSummary();
-  }, []);
-
   const handleCopy = async () => {
     if (!summary) return;
     await navigator.clipboard.writeText(summary);
@@ -221,97 +217,113 @@ function AiSummarySection({ jobTitle, company, description, technologies, source
 
   return (
     <div className="bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-sm hover:border-accent/30">
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center">
-              <svg className="w-3.5 h-3.5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
-              </svg>
-            </div>
-            <span className="text-xs font-bold text-foreground uppercase tracking-wider">Podsumowanie AI</span>
-          </div>
-          <div className="flex items-center gap-1">
-            {summary && !summaryLoading && (
-              <>
-                <button
-                  onClick={handleCopy}
-                  className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:bg-accent/10 hover:text-accent transition-colors"
-                  title="Kopiuj"
-                >
-                  {copied ? (
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20 6 9 17l-5-5" />
-                    </svg>
-                  ) : (
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                    </svg>
-                  )}
-                </button>
-                <button
-                  onClick={() => fetchSummary(true)}
-                  className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:bg-accent/10 hover:text-accent transition-colors"
-                  title="Odśwież"
-                >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                    <polyline points="21 3 21 9 15 9" />
-                  </svg>
-                </button>
-              </>
-            )}
-          </div>
+      {!summary && !summaryLoading && !summaryError && (
+        <div className="p-4">
+          <button
+            onClick={() => fetchSummary()}
+            className="w-full flex items-center justify-center gap-2 text-xs text-accent hover:text-accent/80 transition-colors"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
+            </svg>
+            <span>Wygeneruj podsumowanie AI</span>
+          </button>
         </div>
+      )}
 
-        {summaryLoading && (
-          <div className="space-y-2 py-1">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <svg className="w-3.5 h-3.5 animate-spin text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-              </svg>
-              <span>{loadMessage || loadSteps[loadStep - 1] || 'Inicjalizuję...'}</span>
+      {(summary || summaryLoading || summaryError) && (
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center">
+                <svg className="w-3.5 h-3.5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
+                </svg>
+              </div>
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider">Podsumowanie AI</span>
             </div>
-            <div className="flex gap-1">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
-                    i <= loadStep ? 'bg-accent' : 'bg-accent/20'
-                  }`}
-                />
-              ))}
+            <div className="flex items-center gap-1">
+              {summary && !summaryLoading && (
+                <>
+                  <button
+                    onClick={handleCopy}
+                    className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:bg-accent/10 hover:text-accent transition-colors"
+                    title="Kopiuj"
+                  >
+                    {copied ? (
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 6 9 17l-5-5" />
+                      </svg>
+                    ) : (
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => fetchSummary(true)}
+                    className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:bg-accent/10 hover:text-accent transition-colors"
+                    title="Odśwież"
+                  >
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                      <polyline points="21 3 21 9 15 9" />
+                    </svg>
+                  </button>
+                </>
+              )}
             </div>
           </div>
-        )}
 
-        {summaryError && (
-          <div className="text-xs bg-destructive/10 rounded px-3 py-2 space-y-1">
-            <div className="flex items-center gap-2 text-destructive font-medium">
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" x2="12" y1="8" y2="12" />
-                <line x1="12" x2="12.01" y1="16" y2="16" />
-              </svg>
-              <span>{summaryError}</span>
+          {summaryLoading && (
+            <div className="space-y-2 py-1">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <svg className="w-3.5 h-3.5 animate-spin text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                </svg>
+                <span>{loadMessage || loadSteps[loadStep - 1] || 'Inicjalizuję...'}</span>
+              </div>
+              <div className="flex gap-1">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
+                      i <= loadStep ? 'bg-accent' : 'bg-accent/20'
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
-            {summaryError.includes('wyczerpany') && (
-              <p className="text-destructive/70 text-[11px]">
-                Limit darmowego tieru: 20 requestów/dzień. Resetuje się codziennie.
-              </p>
-            )}
-          </div>
-        )}
+          )}
 
-        {summary && (
-          <div
-            ref={contentRef}
-            className="text-sm text-foreground/80 leading-relaxed space-y-0"
-            dangerouslySetInnerHTML={{ __html: parseMarkdown(summary) }}
-          />
-        )}
-      </div>
+          {summaryError && (
+            <div className="text-xs bg-destructive/10 rounded px-3 py-2 space-y-1">
+              <div className="flex items-center gap-2 text-destructive font-medium">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" x2="12" y1="8" y2="12" />
+                  <line x1="12" x2="12.01" y1="16" y2="16" />
+                </svg>
+                <span>{summaryError}</span>
+              </div>
+              {summaryError.includes('wyczerpany') && (
+                <p className="text-destructive/70 text-[11px]">
+                  Limit darmowego tieru: 20 requestów/dzień. Resetuje się codziennie.
+                </p>
+              )}
+            </div>
+          )}
+
+          {summary && (
+            <div
+              ref={contentRef}
+              className="text-sm text-foreground/80 leading-relaxed space-y-0"
+              dangerouslySetInnerHTML={{ __html: parseMarkdown(summary) }}
+            />
+          )}
+        </div>
+      )}
 
       {summary && model && (
         <div className="px-4 py-2 bg-accent/5 border-t border-accent/10">
@@ -326,6 +338,7 @@ function AiSummarySection({ jobTitle, company, description, technologies, source
 
 function GroupedCard({ job }: { job: GroupedJob }) {
   const [expanded, setExpanded] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
   const salary = getBestSalary(job);
   const modeClass = WORK_MODE_STYLES[job.workMode ?? ''] ?? 'bg-slate-100 text-slate-600';
   const sourceDots = getSourceDots(job.sources);
@@ -346,14 +359,29 @@ function GroupedCard({ job }: { job: GroupedJob }) {
           </a>
           <div className="text-xs text-muted-foreground mt-0.5 break-words">{job.company}</div>
         </div>
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="w-8 h-8 flex items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors flex-shrink-0"
-        >
-          <svg className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m9 18 6-6-6-6" />
-          </svg>
-        </button>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button
+            onClick={() => setShowSummary(!showSummary)}
+            className={`w-8 h-8 flex items-center justify-center rounded border transition-colors ${
+              showSummary
+                ? 'border-accent/30 bg-accent/10 text-accent'
+                : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+            }`}
+            title="Podsumowanie AI"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="w-8 h-8 flex items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            <svg className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -381,16 +409,20 @@ function GroupedCard({ job }: { job: GroupedJob }) {
         ))}
       </div>
 
+      {/* AI Summary - shown when clicking sparkle icon */}
+      <div className={`transition-all duration-300 ease-in-out ${showSummary ? 'max-h-[2000px] opacity-100 mt-3 pt-3 border-t border-border' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+        <AiSummarySection
+          jobTitle={job.title}
+          company={job.company}
+          description={job.description}
+          technologies={job.technologies}
+          sourceUrl={primaryUrl}
+        />
+      </div>
+
+      {/* Expanded sources - shown when clicking arrow */}
       <div className={`transition-all duration-300 ease-in-out ${expanded ? 'max-h-[2000px] opacity-100 mt-3 pt-3 border-t border-border' : 'max-h-0 opacity-0 overflow-hidden'}`}>
         <div className="space-y-3">
-          <AiSummarySection
-            jobTitle={job.title}
-            company={job.company}
-            description={job.description}
-            technologies={job.technologies}
-            sourceUrl={primaryUrl}
-          />
-
           {job.technologies.filter(Boolean).length > 0 && (
             <div className="flex flex-wrap gap-1">
               {job.technologies.filter(Boolean).map((tech, i) => (
