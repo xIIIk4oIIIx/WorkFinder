@@ -235,7 +235,7 @@ export default function Home() {
                 <span className="hidden sm:inline">Ulubione</span>
                 {favorites.size > 0 && (
                   <span className="text-[10px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded-full font-medium">
-                    {favorites.size}
+                    {showFavoritesOnly ? jobs.length : favorites.size}
                   </span>
                 )}
               </button>
