@@ -9,6 +9,7 @@ interface JobTableProps {
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  onFavoritesChange?: () => void;
 }
 
 const SOURCE_MAP: Record<string, { label: string; color: string }> = {
@@ -358,7 +359,7 @@ function AiSummarySection({ jobTitle, company, description, technologies, source
   );
 }
 
-function GroupedCard({ job }: { job: GroupedJob }) {
+function GroupedCard({ job, onFavoritesChange }: { job: GroupedJob; onFavoritesChange?: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -375,6 +376,7 @@ function GroupedCard({ job }: { job: GroupedJob }) {
   const handleFavoriteToggle = () => {
     const newFavorites = toggleFavorite(job.id);
     setIsFavorite(newFavorites.has(job.id));
+    onFavoritesChange?.();
   };
 
   return (
@@ -498,7 +500,7 @@ function GroupedCard({ job }: { job: GroupedJob }) {
   );
 }
 
-function FlatCard({ job }: { job: Job }) {
+function FlatCard({ job, onFavoritesChange }: { job: Job; onFavoritesChange?: () => void }) {
   const [isFavorite, setIsFavorite] = useState(false);
   const source = SOURCE_MAP[job.source] ?? { label: job.source, color: 'bg-muted' };
   const salary = formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency);
@@ -511,6 +513,7 @@ function FlatCard({ job }: { job: Job }) {
   const handleFavoriteToggle = () => {
     const newFavorites = toggleFavorite(job.id);
     setIsFavorite(newFavorites.has(job.id));
+    onFavoritesChange?.();
   };
 
   return (
@@ -580,7 +583,7 @@ function FlatCard({ job }: { job: Job }) {
   );
 }
 
-function GroupedRow({ job }: { job: GroupedJob }) {
+function GroupedRow({ job, onFavoritesChange }: { job: GroupedJob; onFavoritesChange?: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const salary = getBestSalary(job);
@@ -596,6 +599,7 @@ function GroupedRow({ job }: { job: GroupedJob }) {
   const handleFavoriteToggle = () => {
     const newFavorites = toggleFavorite(job.id);
     setIsFavorite(newFavorites.has(job.id));
+    onFavoritesChange?.();
   };
 
   return (
@@ -736,24 +740,52 @@ function GroupedRow({ job }: { job: GroupedJob }) {
   );
 }
 
-function FlatRow({ job }: { job: Job }) {
+function FlatRow({ job, onFavoritesChange }: { job: Job; onFavoritesChange?: () => void }) {
+  const [isFavorite, setIsFavorite] = useState(false);
   const source = SOURCE_MAP[job.source] ?? { label: job.source, color: 'bg-muted' };
   const salary = formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency);
   const modeClass = WORK_MODE_STYLES[job.workMode ?? ''] ?? 'bg-slate-100 text-slate-600';
 
+  useEffect(() => {
+    setIsFavorite(getFavorites().has(job.id));
+  }, [job.id]);
+
+  const handleFavoriteToggle = () => {
+    const newFavorites = toggleFavorite(job.id);
+    setIsFavorite(newFavorites.has(job.id));
+    onFavoritesChange?.();
+  };
+
   return (
     <tr className="border-b border-border last:border-b-0 hover:bg-muted/50 transition-colors">
       <td className="p-3 min-w-0 max-w-[260px]">
-        <a
-          href={job.sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-semibold text-foreground hover:text-accent hover:underline underline-offset-2 transition-colors block break-words"
-        >
-          {job.title}
-        </a>
-        <div className="text-xs text-muted-foreground mt-0.5 break-words" title={job.company}>
-          {job.company}
+        <div className="flex items-start gap-2">
+          <button
+            onClick={handleFavoriteToggle}
+            className={`mt-0.5 w-5 h-5 flex items-center justify-center rounded border transition-colors flex-shrink-0 ${
+              isFavorite
+                ? 'border-rose-300 bg-rose-50 text-rose-500'
+                : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+            }`}
+            title={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
+          >
+            <svg className="w-3 h-3" viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+            </svg>
+          </button>
+          <div className="min-w-0 flex-1">
+            <a
+              href={job.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-foreground hover:text-accent hover:underline underline-offset-2 transition-colors block break-words"
+            >
+              {job.title}
+            </a>
+            <div className="text-xs text-muted-foreground mt-0.5 break-words" title={job.company}>
+              {job.company}
+            </div>
+          </div>
         </div>
       </td>
       <td className="p-3 text-muted-foreground text-sm">{job.city ?? '—'}</td>
@@ -795,7 +827,7 @@ function FlatRow({ job }: { job: Job }) {
   );
 }
 
-export function JobTable({ jobs, total, page, totalPages, onPageChange }: JobTableProps) {
+export function JobTable({ jobs, total, page, totalPages, onPageChange, onFavoritesChange }: JobTableProps) {
   const getPageNumbers = () => {
     const pages: (number | '...')[] = [];
     if (totalPages <= 7) {
@@ -819,9 +851,9 @@ export function JobTable({ jobs, total, page, totalPages, onPageChange }: JobTab
         <div className="lg:hidden divide-y divide-border">
           {jobs.map((job) =>
             isGrouped(job) ? (
-              <GroupedCard key={job.id} job={job} />
+              <GroupedCard key={job.id} job={job} onFavoritesChange={onFavoritesChange} />
             ) : (
-              <FlatCard key={job.id} job={job} />
+              <FlatCard key={job.id} job={job} onFavoritesChange={onFavoritesChange} />
             )
           )}
         </div>
@@ -843,9 +875,9 @@ export function JobTable({ jobs, total, page, totalPages, onPageChange }: JobTab
             <tbody>
               {jobs.map((job) =>
                 isGrouped(job) ? (
-                  <GroupedRow key={job.id} job={job} />
+                  <GroupedRow key={job.id} job={job} onFavoritesChange={onFavoritesChange} />
                 ) : (
-                  <FlatRow key={job.id} job={job} />
+                  <FlatRow key={job.id} job={job} onFavoritesChange={onFavoritesChange} />
                 )
               )}
             </tbody>

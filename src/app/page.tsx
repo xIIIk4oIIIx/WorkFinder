@@ -144,6 +144,10 @@ export default function Home() {
     }
   }, [showFavoritesOnly, allJobs, favorites]);
 
+  const handleFavoritesChange = () => {
+    setFavorites(getFavorites());
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="bg-card border-b border-border">
@@ -254,8 +258,14 @@ export default function Home() {
             ) : jobs.length === 0 ? (
               <div className="text-center py-16 text-muted-foreground">
                 <div className="text-4xl mb-3">🔍</div>
-                <p className="font-medium text-foreground">Nie znaleziono ofert</p>
-                <p className="text-sm mt-1">Spróbuj zmienić kryteria wyszukiwania</p>
+                <p className="font-medium text-foreground">
+                  {showFavoritesOnly ? 'Brak ulubionych ofert' : 'Nie znaleziono ofert'}
+                </p>
+                <p className="text-sm mt-1">
+                  {showFavoritesOnly
+                    ? 'Kliknij serduszko na ofercie aby dodać ją do ulubionych'
+                    : 'Spróbuj zmienić kryteria wyszukiwania'}
+                </p>
               </div>
             ) : (
               <JobTable
@@ -264,6 +274,7 @@ export default function Home() {
                 page={page}
                 totalPages={totalPages}
                 onPageChange={setPage}
+                onFavoritesChange={handleFavoritesChange}
               />
             )}
           </section>
