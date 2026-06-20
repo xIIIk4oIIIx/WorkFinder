@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
@@ -80,14 +80,12 @@ async function scrapeJobPage(url: string): Promise<string | null> {
 function extractTextFromHtml(html: string): string {
   let text = html;
 
-  // Remove scripts, styles, nav, header, footer
   text = text.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
   text = text.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
   text = text.replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, '');
   text = text.replace(/<header[^>]*>[\s\S]*?<\/header>/gi, '');
   text = text.replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, '');
 
-  // Try to find main content area
   const mainMatch = text.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
   const articleMatch = text.match(/<article[^>]*>([\s\S]*?)<\/article>/i);
   const contentMatch = text.match(/<div[^>]*class="[^"]*(?:content|description|details|offer)[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
@@ -96,13 +94,9 @@ function extractTextFromHtml(html: string): string {
   else if (articleMatch) text = articleMatch[1];
   else if (contentMatch) text = contentMatch[1];
 
-  // Remove HTML tags
   text = text.replace(/<[^>]+>/g, ' ');
-
-  // Clean up whitespace
   text = text.replace(/\s+/g, ' ').trim();
 
-  // Decode HTML entities
   text = text.replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
@@ -110,7 +104,6 @@ function extractTextFromHtml(html: string): string {
     .replace(/&#39;/g, "'")
     .replace(/&nbsp;/g, ' ');
 
-  // Limit to ~3000 chars for Gemini context
   return text.substring(0, 3000);
 }
 
@@ -157,57 +150,102 @@ ${content}`;
 
 export async function POST(request: NextRequest) {
   if (!GEMINI_API_KEY) {
-    return NextResponse.json({ error: 'Brak klucza API Gemini' }, { status: 500 });
+    return new Response(JSON.stringify({ error: 'Brak klucza API Gemini' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const { jobTitle, company, description, technologies, sourceUrl } = await request.json();
 
-  // Scrape job page for full content
-  let scrapedContent = null;
-  if (sourceUrl) {
-    scrapedContent = await scrapeJobPage(sourceUrl);
-  }
+  const encoder = new TextEncoder();
 
-  const prompt = buildPrompt(
-    jobTitle,
-    company,
-    technologies ?? [],
-    scrapedContent,
-    description,
-  );
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (event: string, data: unknown) => {
+        controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+      };
 
-  const tryOrder = [...new Set([...workingModels, ...allModels])];
-  let lastQuotaExceeded = false;
-  let lastRetryAfter = null;
+      try {
+        // Step 1: Scraping
+        send('progress', { step: 1, message: 'Pobieram stronę oferty...' });
 
-  for (const modelName of tryOrder) {
-    const result = await tryGenerateContent(modelName, prompt);
+        let scrapedContent = null;
+        if (sourceUrl) {
+          scrapedContent = await scrapeJobPage(sourceUrl);
+        }
 
-    if (result.text) {
-      if (!workingModels.includes(modelName)) {
-        workingModels.push(modelName);
+        send('progress', { step: 1, done: true, message: scrapedContent ? 'Strona pobrana' : 'Brak treści na stronie' });
+
+        // Step 2: Building prompt
+        send('progress', { step: 2, message: 'Przygotowuję dane do analizy...' });
+
+        const prompt = buildPrompt(
+          jobTitle,
+          company,
+          technologies ?? [],
+          scrapedContent,
+          description,
+        );
+
+        send('progress', { step: 2, done: true, message: 'Dane przygotowane' });
+
+        // Step 3: AI generating
+        send('progress', { step: 3, message: 'Generuję podsumowanie przez AI...' });
+
+        const tryOrder = [...new Set([...workingModels, ...allModels])];
+        let lastQuotaExceeded = false;
+        let lastRetryAfter = null;
+
+        for (const modelName of tryOrder) {
+          send('progress', { step: 3, message: `Próbuję model: ${modelName}...` });
+
+          const result = await tryGenerateContent(modelName, prompt);
+
+          if (result.text) {
+            if (!workingModels.includes(modelName)) {
+              workingModels.push(modelName);
+            }
+            send('done', {
+              summary: result.text,
+              model: modelName,
+              scraped: scrapedContent !== null,
+            });
+            controller.close();
+            return;
+          }
+
+          if (result.quotaExceeded) {
+            lastQuotaExceeded = true;
+            lastRetryAfter = result.retryAfter;
+          }
+        }
+
+        if (lastQuotaExceeded) {
+          send('error', {
+            error: 'Limit API Gemini wyczerpany',
+            errorType: 'quota_exceeded',
+            retryAfter: lastRetryAfter,
+            message: 'Przekroczono dzienny limit darmowego tieru (20 requestów/dzień). Spróbuj ponownie jutro.',
+          });
+        } else {
+          send('error', {
+            error: 'Nie udało się wygenerować podsumowania',
+          });
+        }
+      } catch {
+        send('error', { error: 'Błąd połączenia z serwerem' });
       }
-      return NextResponse.json({
-        summary: result.text,
-        model: modelName,
-        scraped: scrapedContent !== null,
-      });
-    }
 
-    if (result.quotaExceeded) {
-      lastQuotaExceeded = true;
-      lastRetryAfter = result.retryAfter;
-    }
-  }
+      controller.close();
+    },
+  });
 
-  if (lastQuotaExceeded) {
-    return NextResponse.json({
-      error: 'Limit API Gemini wyczerpany',
-      errorType: 'quota_exceeded',
-      retryAfter: lastRetryAfter,
-      message: `Przekroczono dzienny limit darmowego tieru (20 requestów/dzień). Spróbuj ponownie jutro lub upgrade do płatnego tieru.`,
-    }, { status: 429 });
-  }
-
-  return NextResponse.json({ error: 'Nie udało się wygenerować podsumowania' }, { status: 500 });
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    },
+  });
 }

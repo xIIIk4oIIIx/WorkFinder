@@ -115,6 +115,7 @@ function AiSummarySection({ jobTitle, company, description, technologies, source
   const [summaryError, setSummaryError] = useState<string | null>(null);
   const [model, setModel] = useState<string | null>(null);
   const [loadStep, setLoadStep] = useState(0);
+  const [loadMessage, setLoadMessage] = useState('');
   const [copied, setCopied] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -123,11 +124,9 @@ function AiSummarySection({ jobTitle, company, description, technologies, source
     setSummaryLoading(true);
     setSummaryError(null);
     setLoadStep(0);
+    setLoadMessage('');
 
     try {
-      // Step 1: Scraping
-      setLoadStep(1);
-
       const res = await fetch('/api/summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -140,27 +139,65 @@ function AiSummarySection({ jobTitle, company, description, technologies, source
         }),
       });
 
-      // Step 2: AI generating (received response from scraping, now parsing)
-      setLoadStep(2);
+      if (!res.ok) {
+        const errorData = await res.json();
+        if (errorData.errorType === 'quota_exceeded') {
+          setSummaryError(errorData.message || 'Limit API Gemini wyczerpany');
+        } else {
+          setSummaryError(errorData.error || 'Nie udało się wygenerować podsumowania');
+        }
+        setSummaryLoading(false);
+        return;
+      }
 
-      const data = await res.json();
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error('No reader');
 
-      // Step 3: Done
-      setLoadStep(3);
+      const decoder = new TextDecoder();
+      let buffer = '';
 
-      if (data.summary) {
-        setSummary(data.summary);
-        setModel(data.model || null);
-      } else if (data.errorType === 'quota_exceeded') {
-        setSummaryError(data.message || 'Limit API Gemini wyczerpany');
-      } else {
-        setSummaryError(data.error || 'Nie udało się wygenerować podsumowania');
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            const eventType = line.slice(7);
+            const dataLine = lines[lines.indexOf(line) + 1];
+            if (dataLine?.startsWith('data: ')) {
+              const data = JSON.parse(dataLine.slice(6));
+
+              if (eventType === 'progress') {
+                setLoadStep(data.step);
+                setLoadMessage(data.message);
+              } else if (eventType === 'done') {
+                setSummary(data.summary);
+                setModel(data.model || null);
+                setLoadStep(3);
+                setLoadMessage('Gotowe!');
+              } else if (eventType === 'error') {
+                if (data.errorType === 'quota_exceeded') {
+                  setSummaryError(data.message || 'Limit API Gemini wyczerpany');
+                } else {
+                  setSummaryError(data.error || 'Nie udało się wygenerować podsumowania');
+                }
+              }
+            }
+          }
+        }
       }
     } catch {
       setSummaryError('Błąd połączenia z serwerem');
     } finally {
       setSummaryLoading(false);
-      setTimeout(() => setLoadStep(0), 500);
+      setTimeout(() => {
+        setLoadStep(0);
+        setLoadMessage('');
+      }, 500);
     }
   };
 
@@ -177,8 +214,9 @@ function AiSummarySection({ jobTitle, company, description, technologies, source
 
   const loadSteps = [
     'Pobieram stronę...',
-    'Analizuję treść...',
+    'Przygotowuję dane...',
     'Generuję podsumowanie...',
+    'Gotowe!',
   ];
 
   return (
@@ -233,7 +271,7 @@ function AiSummarySection({ jobTitle, company, description, technologies, source
               <svg className="w-3.5 h-3.5 animate-spin text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 12a9 9 0 1 1-6.219-8.56" />
               </svg>
-              <span>{loadSteps[loadStep] || loadSteps[0]}</span>
+              <span>{loadMessage || loadSteps[loadStep - 1] || 'Inicjalizuję...'}</span>
             </div>
             <div className="flex gap-1">
               {[0, 1, 2].map((i) => (
