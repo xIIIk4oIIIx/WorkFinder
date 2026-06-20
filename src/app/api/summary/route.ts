@@ -3,8 +3,6 @@ import { NextRequest } from 'next/server';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 const allModels = [
-  'gemini-2.0-flash',
-  'gemini-2.0-flash-lite',
   'gemini-2.5-flash',
   'gemini-2.5-flash-lite',
 ];
