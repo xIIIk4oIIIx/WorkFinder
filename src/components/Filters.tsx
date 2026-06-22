@@ -1,14 +1,52 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DualRangeSlider } from './DualRangeSlider';
 
-function FilterSection({ title, defaultOpen = true, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
-  const [open, setOpen] = useState(defaultOpen);
+const STORAGE_KEY_FILTERS = 'workfinder-filters';
+const STORAGE_KEY_SECTIONS = 'workfinder-filter-sections';
+
+function loadFilters(): FilterState {
+  if (typeof window === 'undefined') return DEFAULT_FILTERS;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_FILTERS);
+    return stored ? { ...DEFAULT_FILTERS, ...JSON.parse(stored) } : DEFAULT_FILTERS;
+  } catch {
+    return DEFAULT_FILTERS;
+  }
+}
+
+function saveFilters(filters: FilterState) {
+  localStorage.setItem(STORAGE_KEY_FILTERS, JSON.stringify(filters));
+}
+
+function loadSections(): Record<string, boolean> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_SECTIONS);
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveSections(sections: Record<string, boolean>) {
+  localStorage.setItem(STORAGE_KEY_SECTIONS, JSON.stringify(sections));
+}
+
+function FilterSection({ title, sectionKey, defaultOpen = true, sections, onToggle, children }: {
+  title: string;
+  sectionKey: string;
+  defaultOpen?: boolean;
+  sections: Record<string, boolean>;
+  onToggle: (key: string) => void;
+  children: React.ReactNode;
+}) {
+  const open = sections[sectionKey] ?? defaultOpen;
   return (
     <div className="pb-3 border-b border-border last:border-b-0 last:pb-0">
       <button
-        onClick={() => setOpen(!open)}
+        onClick={() => onToggle(sectionKey)}
         className="w-full flex items-center justify-between text-[10px] font-[family-name:var(--font-mono)] font-semibold uppercase tracking-widest text-muted-foreground mb-2 hover:text-foreground transition-colors"
       >
         {title}
@@ -55,16 +93,39 @@ const WORK_MODE_OPTIONS = [
 const DEFAULT_FILTERS: FilterState = {
   city: '',
   technology: '',
-  workMode: [], // Empty array means all work modes selected
+  workMode: [],
   salaryMin: '',
   salaryMax: '',
   company: '',
   publishedAfter: '',
-  sources: [], // Empty array means all sources selected
+  sources: [],
+};
+
+const DEFAULT_SECTIONS: Record<string, boolean> = {
+  lokalizacja: false,
+  technologia: false,
+  zarobki: false,
+  zrodla: false,
 };
 
 export function Filters({ onFilter }: FiltersProps) {
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
+  const [sections, setSections] = useState<Record<string, boolean>>(DEFAULT_SECTIONS);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setFilters(loadFilters());
+    setSections(loadSections());
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted) saveFilters(filters);
+  }, [filters, mounted]);
+
+  useEffect(() => {
+    if (mounted) saveSections(sections);
+  }, [sections, mounted]);
 
   const handleChange = (key: keyof FilterState, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -88,8 +149,13 @@ export function Filters({ onFilter }: FiltersProps) {
     });
   };
 
+  const handleSectionToggle = (key: string) => {
+    setSections((prev) => ({ ...prev, [key]: !(prev[key] ?? DEFAULT_SECTIONS[key]) }));
+  };
+
   const handleClear = () => {
     setFilters(DEFAULT_FILTERS);
+    setSections(DEFAULT_SECTIONS);
     onFilter(DEFAULT_FILTERS);
   };
 
@@ -130,7 +196,7 @@ export function Filters({ onFilter }: FiltersProps) {
           </div>
         </div>
 
-        <FilterSection title="Lokalizacja" defaultOpen={false}>
+        <FilterSection title="Lokalizacja" sectionKey="lokalizacja" defaultOpen={false} sections={sections} onToggle={handleSectionToggle}>
           <div className="space-y-2">
             <input
               type="text"
@@ -149,7 +215,7 @@ export function Filters({ onFilter }: FiltersProps) {
           </div>
         </FilterSection>
 
-        <FilterSection title="Technologia" defaultOpen={false}>
+        <FilterSection title="Technologia" sectionKey="technologia" defaultOpen={false} sections={sections} onToggle={handleSectionToggle}>
           <input
             type="text"
             value={filters.technology}
@@ -159,7 +225,7 @@ export function Filters({ onFilter }: FiltersProps) {
           />
         </FilterSection>
 
-        <FilterSection title="Zarobki" defaultOpen={false}>
+        <FilterSection title="Zarobki" sectionKey="zarobki" defaultOpen={false} sections={sections} onToggle={handleSectionToggle}>
           <div className="space-y-2">
             <DualRangeSlider
               min={0}
@@ -180,7 +246,7 @@ export function Filters({ onFilter }: FiltersProps) {
           </div>
         </FilterSection>
 
-        <FilterSection title="Źródła" defaultOpen={false}>
+        <FilterSection title="Źródła" sectionKey="zrodla" defaultOpen={false} sections={sections} onToggle={handleSectionToggle}>
           <div className="flex flex-wrap gap-1.5">
             {AVAILABLE_SOURCES.map((source) => (
               <button
