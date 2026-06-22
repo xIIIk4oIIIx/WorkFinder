@@ -95,7 +95,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="bg-card border-b border-border">
+      <header className="relative bg-card border-b border-border">
         <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-3 lg:py-4">
           <div className="flex items-center justify-between gap-4">
             <h1 className="text-xl lg:text-2xl font-bold tracking-tight font-[family-name:var(--font-geist-sans)] whitespace-nowrap">WorkFinder</h1>
@@ -144,6 +144,9 @@ export default function Home() {
             </div>
           </div>
         </div>
+        {syncing && (
+          <div className="absolute bottom-0 left-0 h-[3px] bg-accent z-10 transition-all duration-1000 ease-linear" style={{ width: `${Math.min((syncElapsed / 30) * 100, 95)}%` }} />
+        )}
       </header>
 
       <main className="max-w-[1400px] mx-auto p-4 lg:p-6">
@@ -285,17 +288,6 @@ export default function Home() {
               <Filters onFilter={(f) => { handleFilter(f); setMobileFiltersOpen(false); }} />
             </div>
           </div>
-        </div>
-      )}
-
-      {syncing && (
-        <div className="fixed top-[57px] left-0 right-0 z-50 h-8 bg-accent/5 border-b border-accent/20 flex items-center justify-center gap-2">
-          <svg className="w-3.5 h-3.5 animate-spin text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-          </svg>
-          <span className="text-xs font-medium text-accent">
-            Odświeżanie ofert... {syncElapsed}s
-          </span>
         </div>
       )}
     </div>
