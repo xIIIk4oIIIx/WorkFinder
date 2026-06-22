@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
   const company = searchParams.get('company') ?? '';
   const publishedAfter = searchParams.get('publishedAfter') ?? '';
   const sourceParam = searchParams.get('source') ?? '';
+  const idsParam = searchParams.get('ids') ?? '';
   const sortParam = searchParams.get('sort') ?? 'createdAt';
   const orderParam = searchParams.get('order') ?? 'desc';
   const grouped = searchParams.get('grouped') !== 'false';
@@ -102,21 +103,32 @@ export async function GET(request: NextRequest) {
     const sources = sourceParam.split(',').map((s) => s.trim()).filter(Boolean);
     if (sources.length > 0) where.source = { in: sources };
   }
+  if (idsParam) {
+    const ids = idsParam.split(',').map((id) => id.trim()).filter(Boolean);
+    if (ids.length > 0) where.id = { in: ids };
+  }
+
+  const hasIdsFilter = !!idsParam;
 
   if (!grouped) {
-    const [jobs, total] = await Promise.all([
+    const countPromise = db.jobOffer.count({ where });
+    const allTotalPromise = hasIdsFilter
+      ? db.jobOffer.count({ where: { ...where, id: undefined } })
+      : countPromise;
+    const [jobs, total, allTotal] = await Promise.all([
       db.jobOffer.findMany({
         where,
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { [sort]: order },
       }),
-      db.jobOffer.count({ where }),
+      countPromise,
+      allTotalPromise,
     ]);
 
     return NextResponse.json({
       jobs,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+      pagination: { page, limit, total, allTotal, totalPages: Math.ceil(total / limit) },
     });
   }
 
@@ -206,8 +218,17 @@ export async function GET(request: NextRequest) {
   const totalPages = Math.ceil(total / limit);
   const paged = groups.slice((page - 1) * limit, page * limit);
 
+  const allTotal = hasIdsFilter
+    ? (await db.jobOffer.findMany({ where: { ...where, id: undefined } }))
+        .reduce((map, job) => {
+          const key = `${normalizeTitle(job.title)}|||${job.company.toLowerCase().trim()}`;
+          if (!map.has(key)) map.set(key, true);
+          return map;
+        }, new Map<string, boolean>()).size
+    : groups.length;
+
   return NextResponse.json({
     jobs: paged,
-    pagination: { page, limit, total, totalPages },
+    pagination: { page, limit, total, allTotal, totalPages },
   });
 }

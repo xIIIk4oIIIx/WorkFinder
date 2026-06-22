@@ -74,19 +74,22 @@ export default function Home() {
       if (filters.company) params.set('company', filters.company);
       if (filters.publishedAfter) params.set('publishedAfter', filters.publishedAfter);
       if (filters.sources.length > 0) params.set('source', filters.sources.join(','));
+      if (showFavoritesOnly && favorites.size > 0) {
+        params.set('ids', [...favorites].join(','));
+      }
 
       const res = await fetch(`/api/jobs?${params.toString()}`);
       if (!res.ok) throw new Error(`Błąd serwera: ${res.status}`);
       const data = await res.json();
       setAllJobs(data.jobs);
-      setTotal(data.pagination.total);
+      setTotal(data.pagination.allTotal ?? data.pagination.total);
       setTotalPages(data.pagination.totalPages);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Nie udało się załadować danych');
     } finally {
       setLoading(false);
     }
-  }, [page, search, filters]);
+  }, [page, search, filters, showFavoritesOnly, favorites]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -132,17 +135,10 @@ export default function Home() {
     setSyncing(false);
   };
 
-  // Filter jobs based on favorites
+  // Update displayed jobs when allJobs changes
   useEffect(() => {
-    if (showFavoritesOnly) {
-      const filtered = allJobs.filter(job => favorites.has(job.id));
-      setJobs(filtered);
-      setTotal(filtered.length);
-      setTotalPages(1);
-    } else {
-      setJobs(allJobs);
-    }
-  }, [showFavoritesOnly, allJobs, favorites]);
+    setJobs(allJobs);
+  }, [allJobs]);
 
   const handleFavoritesChange = () => {
     setFavorites(getFavorites());
@@ -222,7 +218,7 @@ export default function Home() {
                 Filtry
               </button>
               <button
-                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                onClick={() => { setShowFavoritesOnly(!showFavoritesOnly); setPage(1); }}
                 className={`flex items-center gap-2 px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
                   showFavoritesOnly
                     ? 'border-rose-300 bg-rose-50 text-rose-600'
