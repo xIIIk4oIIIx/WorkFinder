@@ -3,6 +3,24 @@
 import { useState } from 'react';
 import { DualRangeSlider } from './DualRangeSlider';
 
+function FilterSection({ title, defaultOpen = true, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="pb-3 border-b border-border last:border-b-0 last:pb-0">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between text-[10px] font-[family-name:var(--font-mono)] font-semibold uppercase tracking-widest text-muted-foreground mb-2 hover:text-foreground transition-colors"
+      >
+        {title}
+        <svg className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+      {open && children}
+    </div>
+  );
+}
+
 interface FiltersProps {
   onFilter: (filters: FilterState) => void;
 }
@@ -92,8 +110,7 @@ export function Filters({ onFilter }: FiltersProps) {
       </div>
 
       <div className="space-y-4">
-        <div className="pb-3 border-b border-border">
-          <div className="text-[10px] font-[family-name:var(--font-mono)] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Lokalizacja</div>
+        <FilterSection title="Lokalizacja">
           <div className="space-y-2">
             <input
               type="text"
@@ -110,10 +127,9 @@ export function Filters({ onFilter }: FiltersProps) {
               className="w-full px-3 py-1.5 border border-border rounded-md bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
             />
           </div>
-        </div>
+        </FilterSection>
 
-        <div className="pb-3 border-b border-border">
-          <div className="text-[10px] font-[family-name:var(--font-mono)] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Technologia</div>
+        <FilterSection title="Technologia">
           <input
             type="text"
             value={filters.technology}
@@ -121,54 +137,49 @@ export function Filters({ onFilter }: FiltersProps) {
             placeholder="np. React, Node.js"
             className="w-full px-3 py-1.5 border border-border rounded-md bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
           />
-        </div>
+        </FilterSection>
 
-<div className="pb-3 border-b border-border">
-            <div className="text-[10px] font-[family-name:var(--font-mono)] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Praca</div>
-            <div className="space-y-2">
-              <div className="flex flex-wrap gap-1.5">
-                {WORK_MODE_OPTIONS.map((mode) => (
-                  <button
-                    key={mode.id}
-                    onClick={() => handleWorkModeToggle(mode.id)}
-                    className={`inline-flex items-center gap-1.5 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2.5 py-1 rounded-md border transition-colors ${
-                      filters.workMode.includes(mode.id)
-                        ? 'border-accent/30 bg-accent/10 text-accent'
-                        : 'border-border bg-card text-muted-foreground'
-                    }`}
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full ${mode.id === 'remote' ? 'bg-emerald-500' : mode.id === 'office' ? 'bg-slate-400' : 'bg-amber-500'}`} />
-                    {mode.label}
-                  </button>
-                ))}
-              </div>
+        <FilterSection title="Praca">
+          <div className="flex flex-wrap gap-1.5">
+            {WORK_MODE_OPTIONS.map((mode) => (
+              <button
+                key={mode.id}
+                onClick={() => handleWorkModeToggle(mode.id)}
+                className={`inline-flex items-center gap-1.5 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2.5 py-1 rounded-md border transition-colors ${
+                  filters.workMode.includes(mode.id)
+                    ? 'border-accent/30 bg-accent/10 text-accent'
+                    : 'border-border bg-card text-muted-foreground'
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${mode.id === 'remote' ? 'bg-emerald-500' : mode.id === 'office' ? 'bg-slate-400' : 'bg-amber-500'}`} />
+                {mode.label}
+              </button>
+            ))}
+          </div>
+        </FilterSection>
+
+        <FilterSection title="Zarobki">
+          <div className="space-y-2">
+            <DualRangeSlider
+              min={0}
+              max={100000}
+              step={1000}
+              value={[
+                filters.salaryMin !== '' ? parseInt(filters.salaryMin) : 0,
+                filters.salaryMax !== '' ? parseInt(filters.salaryMax) : 100000,
+              ]}
+              onChange={([min, max]) => {
+                setFilters((prev) => ({ ...prev, salaryMin: min.toString(), salaryMax: max.toString() }));
+              }}
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>{filters.salaryMin !== '' ? `${parseInt(filters.salaryMin).toLocaleString('pl-PL')} PLN` : '0 PLN'}</span>
+              <span>{filters.salaryMax !== '' ? `${parseInt(filters.salaryMax).toLocaleString('pl-PL')} PLN` : '100k PLN'}</span>
             </div>
           </div>
+        </FilterSection>
 
-          <div className="pb-3 border-b border-border">
-            <div className="text-[10px] font-[family-name:var(--font-mono)] font-semibold uppercase tracking-widest text-muted-foreground mb-2">ZAROBKI</div>
-            <div className="space-y-2">
-              <DualRangeSlider
-                min={0}
-                max={100000}
-                step={1000}
-                value={[
-                  filters.salaryMin !== '' ? parseInt(filters.salaryMin) : 0,
-                  filters.salaryMax !== '' ? parseInt(filters.salaryMax) : 100000,
-                ]}
-                onChange={([min, max]) => {
-                  setFilters((prev) => ({ ...prev, salaryMin: min.toString(), salaryMax: max.toString() }));
-                }}
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{filters.salaryMin !== '' ? `${parseInt(filters.salaryMin).toLocaleString('pl-PL')} PLN` : '0 PLN'}</span>
-                <span>{filters.salaryMax !== '' ? `${parseInt(filters.salaryMax).toLocaleString('pl-PL')} PLN` : '100k PLN'}</span>
-              </div>
-            </div>
-          </div>
-
-        <div>
-          <div className="text-[10px] font-[family-name:var(--font-mono)] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Źródła</div>
+        <FilterSection title="Źródła">
           <div className="flex flex-wrap gap-1.5">
             {AVAILABLE_SOURCES.map((source) => (
               <button
@@ -185,7 +196,7 @@ export function Filters({ onFilter }: FiltersProps) {
               </button>
             ))}
           </div>
-        </div>
+        </FilterSection>
       </div>
 
       <button
