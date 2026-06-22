@@ -110,7 +110,27 @@ export function Filters({ onFilter }: FiltersProps) {
       </div>
 
       <div className="space-y-4">
-        <FilterSection title="Lokalizacja">
+        <div className="pb-3 border-b border-border">
+          <div className="text-[10px] font-[family-name:var(--font-mono)] font-semibold uppercase tracking-widest text-muted-foreground mb-2">Praca</div>
+          <div className="flex flex-wrap gap-1.5">
+            {WORK_MODE_OPTIONS.map((mode) => (
+              <button
+                key={mode.id}
+                onClick={() => handleWorkModeToggle(mode.id)}
+                className={`inline-flex items-center gap-1.5 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2.5 py-1 rounded-md border transition-colors ${
+                  filters.workMode.includes(mode.id)
+                    ? 'border-accent/30 bg-accent/10 text-accent'
+                    : 'border-border bg-card text-muted-foreground'
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${mode.id === 'remote' ? 'bg-emerald-500' : mode.id === 'office' ? 'bg-slate-400' : 'bg-amber-500'}`} />
+                {mode.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <FilterSection title="Lokalizacja" defaultOpen={false}>
           <div className="space-y-2">
             <input
               type="text"
@@ -129,7 +149,7 @@ export function Filters({ onFilter }: FiltersProps) {
           </div>
         </FilterSection>
 
-        <FilterSection title="Technologia">
+        <FilterSection title="Technologia" defaultOpen={false}>
           <input
             type="text"
             value={filters.technology}
@@ -139,26 +159,7 @@ export function Filters({ onFilter }: FiltersProps) {
           />
         </FilterSection>
 
-        <FilterSection title="Praca">
-          <div className="flex flex-wrap gap-1.5">
-            {WORK_MODE_OPTIONS.map((mode) => (
-              <button
-                key={mode.id}
-                onClick={() => handleWorkModeToggle(mode.id)}
-                className={`inline-flex items-center gap-1.5 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2.5 py-1 rounded-md border transition-colors ${
-                  filters.workMode.includes(mode.id)
-                    ? 'border-accent/30 bg-accent/10 text-accent'
-                    : 'border-border bg-card text-muted-foreground'
-                }`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${mode.id === 'remote' ? 'bg-emerald-500' : mode.id === 'office' ? 'bg-slate-400' : 'bg-amber-500'}`} />
-                {mode.label}
-              </button>
-            ))}
-          </div>
-        </FilterSection>
-
-        <FilterSection title="Zarobki">
+        <FilterSection title="Zarobki" defaultOpen={false}>
           <div className="space-y-2">
             <DualRangeSlider
               min={0}
@@ -179,7 +180,7 @@ export function Filters({ onFilter }: FiltersProps) {
           </div>
         </FilterSection>
 
-        <FilterSection title="Źródła">
+        <FilterSection title="Źródła" defaultOpen={false}>
           <div className="flex flex-wrap gap-1.5">
             {AVAILABLE_SOURCES.map((source) => (
               <button
