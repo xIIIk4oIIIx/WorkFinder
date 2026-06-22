@@ -55,7 +55,7 @@ export default function Home() {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [search]);
 
-  const { jobs, total, totalPages, isLoading, error, mutate: mutateJobs } = useJobs(
+  const { jobs, total, totalPages, isLoading, isValidating, error, mutate: mutateJobs } = useJobs(
     page, debouncedSearch, filters, showFavoritesOnly, favorites
   );
   const { stats, mutate: mutateStats } = useStats();
@@ -272,6 +272,18 @@ export default function Home() {
             <div className="p-4">
               <Filters onFilter={(f) => { handleFilter(f); setMobileFiltersOpen(false); }} />
             </div>
+          </div>
+        </div>
+      )}
+
+      {syncing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4">
+            <svg className="w-10 h-10 animate-spin text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+              <polyline points="21 3 21 9 15 9" />
+            </svg>
+            <p className="text-foreground font-medium">Ładowanie nowych ofert pracy...</p>
           </div>
         </div>
       )}

@@ -1,4 +1,5 @@
 import useSWR from 'swr';
+import { useRef, useCallback } from 'react';
 import type { Job, GroupedJob } from '@/types/job';
 import type { FilterState } from '@/components/Filters';
 
@@ -11,6 +12,28 @@ interface JobsResponse {
     allTotal?: number;
     totalPages: number;
   };
+}
+
+const CACHE_PREFIX = 'workfinder-jobs-cache:';
+
+function getCacheKey(url: string): string {
+  return CACHE_PREFIX + url;
+}
+
+function loadCache(url: string): JobsResponse | undefined {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const stored = localStorage.getItem(getCacheKey(url));
+    return stored ? JSON.parse(stored) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function saveCache(url: string, data: JobsResponse) {
+  try {
+    localStorage.setItem(getCacheKey(url), JSON.stringify(data));
+  } catch {}
 }
 
 function buildJobsUrl(
@@ -52,18 +75,27 @@ export function useJobs(
   favorites: Set<string>
 ) {
   const key = buildJobsUrl(page, search, filters, showFavoritesOnly, favorites);
+  const cacheRef = useRef<JobsResponse | undefined>(undefined);
+  if (cacheRef.current === undefined) {
+    cacheRef.current = loadCache(key);
+  }
 
-  const { data, error, isLoading, mutate } = useSWR<JobsResponse>(key, fetcher, {
+  const { data, error, isLoading, isValidating, mutate } = useSWR<JobsResponse>(key, fetcher, {
+    fallbackData: cacheRef.current,
     dedupingInterval: 2000,
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
+    onSuccess: (d) => saveCache(key, d),
   });
 
+  const isInitialLoad = isLoading && !data;
+
   return {
-    jobs: data?.jobs ?? [],
-    total: data?.pagination.allTotal ?? data?.pagination.total ?? 0,
-    totalPages: data?.pagination.totalPages ?? 1,
-    isLoading,
+    jobs: data?.jobs ?? cacheRef.current?.jobs ?? [],
+    total: data?.pagination.allTotal ?? data?.pagination.total ?? cacheRef.current?.pagination.allTotal ?? cacheRef.current?.pagination.total ?? 0,
+    totalPages: data?.pagination.totalPages ?? cacheRef.current?.pagination.totalPages ?? 1,
+    isLoading: isInitialLoad,
+    isValidating,
     error: error?.message ?? null,
     mutate,
   };
