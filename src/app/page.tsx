@@ -241,7 +241,7 @@ export default function Home() {
                 <span className="hidden sm:inline">Ulubione</span>
                 {favorites.size > 0 && (
                   <span className="text-[10px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded-full font-medium">
-                    {showFavoritesOnly ? jobs.length : favorites.size}
+                    {favorites.size}
                   </span>
                 )}
               </button>
@@ -332,8 +332,7 @@ export default function Home() {
             onClick={() => setMobileFiltersOpen(false)}
           />
           <div className="absolute inset-y-0 left-0 w-80 max-w-[85vw] bg-background shadow-xl overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b border-border">
-              <h2 className="text-sm font-semibold">Filtry</h2>
+            <div className="flex items-center justify-end p-4 border-b border-border">
               <button
                 onClick={() => setMobileFiltersOpen(false)}
                 className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-muted transition-colors"
