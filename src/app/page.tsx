@@ -5,6 +5,7 @@ import { SearchBar } from '@/components/SearchBar';
 import { Filters, FilterState } from '@/components/Filters';
 import { JobTable } from '@/components/JobTable';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import type { Job, GroupedJob } from '@/types/job';
 
 // Favorites helpers (same as in JobTable)
@@ -184,7 +185,9 @@ export default function Home() {
               </div>
             </div>
 
-            <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm">
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm">
               <svg className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                 <polyline points="21 3 21 9 15 9" />
@@ -192,6 +195,7 @@ export default function Home() {
               <span className="hidden sm:inline">{syncing ? 'Odświeżanie...' : 'Odśwież'}</span>
               <span className="sm:hidden">{syncing ? '...' : ''}</span>
             </Button>
+            </div>
           </div>
         </div>
       </header>
