@@ -90,7 +90,7 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, filters, showFavoritesOnly, favorites]);
+  }, [page, search, filters, showFavoritesOnly]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -117,6 +117,12 @@ export default function Home() {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [fetchJobs]);
+
+  useEffect(() => {
+    if (showFavoritesOnly) {
+      fetchJobs();
+    }
+  }, [favorites, showFavoritesOnly, fetchJobs]);
 
   const handleSearch = (query: string) => {
     setSearch(query);
@@ -250,10 +256,47 @@ export default function Home() {
               </div>
             )}
             {loading ? (
-              <div className="space-y-3">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="h-14 bg-muted rounded-lg animate-pulse" />
-                ))}
+              <div className="border border-border rounded-lg bg-card overflow-hidden">
+                <div className="hidden lg:block">
+                  <table className="w-full border-collapse text-sm">
+                    <thead>
+                      <tr className="border-b border-border bg-muted">
+                        <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap max-w-[260px]">Tytuł / Firma</th>
+                        <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Lokalizacja</th>
+                        <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Zarobki</th>
+                        <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Technologie</th>
+                        <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden xl:table-cell">Tryb</th>
+                        <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Źródło</th>
+                        <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden xl:table-cell">Data</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Array.from({ length: 8 }).map((_, i) => (
+                        <tr key={i} className="border-b border-border last:border-b-0">
+                          <td className="p-3"><div className="h-4 bg-muted rounded animate-pulse w-3/4" /><div className="h-3 bg-muted rounded animate-pulse w-1/2 mt-1.5" /></td>
+                          <td className="p-3"><div className="h-4 bg-muted rounded animate-pulse w-20" /></td>
+                          <td className="p-3"><div className="h-4 bg-muted rounded animate-pulse w-24" /></td>
+                          <td className="p-3"><div className="flex gap-1"><div className="h-5 bg-muted rounded animate-pulse w-14" /><div className="h-5 bg-muted rounded animate-pulse w-16" /></div></td>
+                          <td className="p-3 hidden xl:table-cell"><div className="h-5 bg-muted rounded-full animate-pulse w-20" /></td>
+                          <td className="p-3"><div className="h-5 bg-muted rounded animate-pulse w-20" /></td>
+                          <td className="p-3 hidden xl:table-cell"><div className="h-4 bg-muted rounded animate-pulse w-16" /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="lg:hidden divide-y divide-border">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="p-4">
+                      <div className="h-4 bg-muted rounded animate-pulse w-3/4" />
+                      <div className="h-3 bg-muted rounded animate-pulse w-1/2 mt-2" />
+                      <div className="flex gap-2 mt-3">
+                        <div className="h-5 bg-muted rounded animate-pulse w-20" />
+                        <div className="h-5 bg-muted rounded-full animate-pulse w-16" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : jobs.length === 0 ? (
               <div className="text-center py-16 text-muted-foreground">
