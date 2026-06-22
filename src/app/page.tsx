@@ -277,14 +277,8 @@ export default function Home() {
       )}
 
       {syncing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-4">
-            <svg className="w-10 h-10 animate-spin text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-              <polyline points="21 3 21 9 15 9" />
-            </svg>
-            <p className="text-foreground font-medium">Ładowanie nowych ofert pracy...</p>
-          </div>
+        <div className="fixed top-0 left-0 right-0 z-50 h-[3px] bg-accent/20">
+          <div className="h-full bg-accent animate-sync-bar" />
         </div>
       )}
     </div>
