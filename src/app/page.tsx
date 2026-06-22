@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { SearchBar } from '@/components/SearchBar';
 import { Filters, FilterState } from '@/components/Filters';
 import { JobTable } from '@/components/JobTable';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import type { Job, GroupedJob } from '@/types/job';
+import { useJobs } from '@/hooks/useJobs';
+import { useStats } from '@/hooks/useStats';
 
-// Favorites helpers (same as in JobTable)
 function getFavorites(): Set<string> {
   if (typeof window === 'undefined') return new Set();
   try {
@@ -20,12 +20,9 @@ function getFavorites(): Set<string> {
 }
 
 export default function Home() {
-  const [jobs, setJobs] = useState<(Job | GroupedJob)[]>([]);
-  const [allJobs, setAllJobs] = useState<(Job | GroupedJob)[]>([]);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filters, setFilters] = useState<FilterState>({
     city: '',
     technology: '',
@@ -36,93 +33,32 @@ export default function Home() {
     publishedAfter: '',
     sources: [],
   });
-  const [loading, setLoading] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState<{ total: number; bySource: { source: string; count: number }[]; lastSync: string | null; todayNew: number } | null>(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [syncing, setSyncing] = useState(false);
 
-  // Load favorites on mount
   useEffect(() => {
     setFavorites(getFavorites());
   }, []);
 
-  // Update favorites when storage changes
   useEffect(() => {
-    const handleStorageChange = () => {
-      setFavorites(getFavorites());
-    };
+    const handleStorageChange = () => setFavorites(getFavorites());
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const fetchJobs = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams();
-      params.set('page', String(page));
-      params.set('limit', '25');
-      params.set('grouped', 'true');
-      if (search) params.set('search', search);
-      if (filters.city) params.set('city', filters.city);
-      if (filters.technology) params.set('technology', filters.technology);
-      if (filters.workMode.length > 0) params.set('workMode', filters.workMode.join(','));
-      if (filters.salaryMin) params.set('salaryMin', filters.salaryMin);
-      if (filters.salaryMax) params.set('salaryMax', filters.salaryMax);
-      if (filters.company) params.set('company', filters.company);
-      if (filters.publishedAfter) params.set('publishedAfter', filters.publishedAfter);
-      if (filters.sources.length > 0) params.set('source', filters.sources.join(','));
-      if (showFavoritesOnly && favorites.size > 0) {
-        params.set('ids', [...favorites].join(','));
-      }
-
-      const res = await fetch(`/api/jobs?${params.toString()}`);
-      if (!res.ok) throw new Error(`Błąd serwera: ${res.status}`);
-      const data = await res.json();
-      setAllJobs(data.jobs);
-      setTotal(data.pagination.allTotal ?? data.pagination.total);
-      setTotalPages(data.pagination.totalPages);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Nie udało się załadować danych');
-    } finally {
-      setLoading(false);
-    }
-  }, [page, search, filters, showFavoritesOnly]);
-
-  const fetchStats = useCallback(async () => {
-    try {
-      const res = await fetch('/api/stats');
-      if (res.ok) {
-        const data = await res.json();
-        setStats(data);
-      }
-    } catch {}
-  }, []);
-
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
-
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      fetchJobs();
-    }, 300);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [fetchJobs]);
+    debounceRef.current = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [search]);
 
-  useEffect(() => {
-    if (showFavoritesOnly) {
-      fetchJobs();
-    }
-  }, [favorites, showFavoritesOnly, fetchJobs]);
+  const { jobs, total, totalPages, isLoading, error, mutate: mutateJobs } = useJobs(
+    page, debouncedSearch, filters, showFavoritesOnly, favorites
+  );
+  const { stats, mutate: mutateStats } = useStats();
 
   const handleSearch = (query: string) => {
     setSearch(query);
@@ -137,15 +73,9 @@ export default function Home() {
   const handleSync = async () => {
     setSyncing(true);
     await fetch('/api/sync', { method: 'POST' });
-    await fetchJobs();
-    await fetchStats();
+    await Promise.all([mutateJobs(), mutateStats()]);
     setSyncing(false);
   };
-
-  // Update displayed jobs when allJobs changes
-  useEffect(() => {
-    setJobs(allJobs);
-  }, [allJobs]);
 
   const handleFavoritesChange = () => {
     setFavorites(getFavorites());
@@ -158,7 +88,6 @@ export default function Home() {
           <div className="flex items-center justify-between gap-4">
             <h1 className="text-xl lg:text-2xl font-bold tracking-tight font-[family-name:var(--font-geist-sans)] whitespace-nowrap">WorkFinder</h1>
 
-            {/* Compact mobile stats */}
             <div className="flex md:hidden items-center gap-3 text-xs">
               <div className="flex items-center gap-1">
                 <span className="font-bold text-foreground">{total.toLocaleString('pl-PL')}</span>
@@ -171,7 +100,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Full desktop stats */}
             <div className="hidden md:grid grid-cols-4 gap-3">
               <div className="border border-border rounded-lg px-4 py-3 bg-background">
                 <div className="text-2xl font-bold tracking-tight font-[family-name:var(--font-geist-sans)]">{total.toLocaleString('pl-PL')}</div>
@@ -194,13 +122,13 @@ export default function Home() {
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm">
-              <svg className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                <polyline points="21 3 21 9 15 9" />
-              </svg>
-              <span className="hidden sm:inline">{syncing ? 'Odświeżanie...' : 'Odśwież'}</span>
-              <span className="sm:hidden">{syncing ? '...' : ''}</span>
-            </Button>
+                <svg className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                  <polyline points="21 3 21 9 15 9" />
+                </svg>
+                <span className="hidden sm:inline">{syncing ? 'Odświeżanie...' : 'Odśwież'}</span>
+                <span className="sm:hidden">{syncing ? '...' : ''}</span>
+              </Button>
             </div>
           </div>
         </div>
@@ -255,7 +183,7 @@ export default function Home() {
                 {error}
               </div>
             )}
-            {loading ? (
+            {isLoading ? (
               <div className="border border-border rounded-lg bg-card overflow-hidden">
                 <div className="hidden lg:block">
                   <table className="w-full border-collapse text-sm">
@@ -324,7 +252,6 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Mobile filters drawer */}
       {mobileFiltersOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
