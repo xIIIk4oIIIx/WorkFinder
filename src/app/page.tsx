@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { SearchBar } from '@/components/SearchBar';
 import { Filters, FilterState } from '@/components/Filters';
 import { JobTable } from '@/components/JobTable';
@@ -37,6 +37,8 @@ export default function Home() {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [syncing, setSyncing] = useState(false);
+  const [syncElapsed, setSyncElapsed] = useState(0);
+  const syncTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setFavorites(getFavorites());
@@ -72,10 +74,20 @@ export default function Home() {
 
   const handleSync = async () => {
     setSyncing(true);
+    setSyncElapsed(0);
+    const startTime = Date.now();
+    syncTimerRef.current = setInterval(() => {
+      setSyncElapsed(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
     await fetch('/api/sync', { method: 'POST' });
     await Promise.all([mutateJobs(), mutateStats()]);
+    if (syncTimerRef.current) clearInterval(syncTimerRef.current);
     setSyncing(false);
   };
+
+  useEffect(() => {
+    return () => { if (syncTimerRef.current) clearInterval(syncTimerRef.current); };
+  }, []);
 
   const handleFavoritesChange = () => {
     setFavorites(getFavorites());
@@ -277,8 +289,13 @@ export default function Home() {
       )}
 
       {syncing && (
-        <div className="fixed top-0 left-0 right-0 z-50 h-[3px] bg-accent/20">
-          <div className="h-full bg-accent animate-sync-bar" />
+        <div className="fixed top-[57px] left-0 right-0 z-50 h-8 bg-accent/5 border-b border-accent/20 flex items-center justify-center gap-2">
+          <svg className="w-3.5 h-3.5 animate-spin text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+          </svg>
+          <span className="text-xs font-medium text-accent">
+            Odświeżanie ofert... {syncElapsed}s
+          </span>
         </div>
       )}
     </div>
