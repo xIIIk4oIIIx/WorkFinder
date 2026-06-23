@@ -73,13 +73,11 @@ export function useJobs(
   search: string,
   filters: FilterState,
   showFavoritesOnly: boolean,
-  favorites: Set<string>,
-  initialCache?: JobsResponse
+  favorites: Set<string>
 ) {
   const key = buildJobsUrl(page, search, filters, showFavoritesOnly, favorites);
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<JobsResponse>(key, fetcher, {
-    fallbackData: initialCache,
     revalidateOnMount: true,
     dedupingInterval: 2000,
     revalidateOnFocus: true,
@@ -87,7 +85,7 @@ export function useJobs(
     onSuccess: (d) => saveCache(key, d),
   });
 
-  const finalData = data ?? initialCache ?? null;
+  const finalData = data ?? null;
 
   const isInitialLoad = isLoading && !data;
 
