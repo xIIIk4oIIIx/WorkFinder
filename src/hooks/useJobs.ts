@@ -87,14 +87,7 @@ export function useJobs(
     onSuccess: (d) => saveCache(key, d),
   });
 
-  // Prefer data with non-empty jobs to avoid showing empty list when we have cached jobs
-  const goodServerData = data?.jobs?.length ?? 0 > 0 ? data : null;
-  const goodCacheData = (initialCache ?? null)?.jobs?.length ?? 0 > 0 ? (initialCache ?? null) : null;
-  
-  const finalData = 
-    goodServerData ?? 
-    goodCacheData ?? 
-    (data ?? initialCache ?? null);
+  const finalData = data ?? initialCache ?? null;
 
   const isInitialLoad = isLoading && !data;
 
