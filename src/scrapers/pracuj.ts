@@ -35,59 +35,87 @@ async function scrapePage(url: string): Promise<JobOfferInput[]> {
   const jobs: JobOfferInput[] = [];
 
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.goto(url, { waitUntil: 'networkidle', timeout: 45000 });
     await page.waitForTimeout(3000);
 
-    const jobCards = await page.$$('[data-test="offer-card"], .offer-card, a[href*="/praca/"]');
+    const offerLinks = await page.$$('[data-test="link-offer"]');
 
-    for (const card of jobCards) {
+    for (const link of offerLinks) {
       try {
-        const titleEl = await card.$('h2, h3, [data-test="offer-title"], .offer-title');
-        const title = titleEl ? (await titleEl.textContent())?.trim() : null;
+        const titleAttr = await link.getAttribute('title');
+        const title = titleAttr?.replace(/^Zobacz ofertę\s+/, '').trim();
         if (!title) continue;
 
-        const companyEl = await card.$('[data-test="offer-company"], .offer-company, span[class*="company"]');
-        const company = companyEl ? (await companyEl.textContent())?.trim() ?? 'Unknown' : 'Unknown';
-
-        const linkEl = await card.$('a[href]');
-        const href = linkEl ? await linkEl.getAttribute('href') : null;
-        const sourceUrl = href?.startsWith('http') ? href : href ? `https://it.pracuj.pl${href}` : null;
+        const sourceUrl = await link.getAttribute('href');
         if (!sourceUrl) continue;
 
-        const locationEl = await card.$('[data-test="offer-location"], .offer-location, span[class*="location"]');
-        const locationText = locationEl ? (await locationEl.textContent())?.trim() : '';
-        const city = locationText?.split(',')[0]?.trim() || undefined;
+        const tile = await link.evaluateHandle((el) => el.closest('[class*="offer-tile"]') || el.parentElement?.parentElement?.parentElement);
+        const tileEl = tile.asElement();
 
-        const salaryEl = await card.$('[data-test="offer-salary"], .offer-salary, span[class*="salary"]');
-        const salaryText = salaryEl ? (await salaryEl.textContent())?.trim() : '';
-        let salaryMin: number | undefined;
-        let salaryMax: number | undefined;
-        if (salaryText) {
-          const nums = salaryText.replace(/\s/g, '').match(/(\d[\d,.]*)/g);
-          if (nums && nums.length >= 2) {
-            salaryMin = Math.round(parseFloat(nums[0].replace(/,/g, '')));
-            salaryMax = Math.round(parseFloat(nums[1].replace(/,/g, '')));
-          } else if (nums && nums.length === 1) {
-            salaryMin = Math.round(parseFloat(nums[0].replace(/,/g, '')));
+        let company = 'Unknown';
+        if (tileEl) {
+          const companyLink = await tileEl.$('[data-test="link-company-profile"]');
+          if (companyLink) {
+            const companyTitle = await companyLink.getAttribute('title');
+            company = companyTitle?.replace(/^Zobacz profil pracodawcy\s+/, '').trim() || 'Unknown';
           }
         }
 
-        const techEls = await card.$$('[data-test="offer-tags"] span, .offer-tags span, span[class*="tag"]');
-        const technologies: string[] = [];
-        for (const t of techEls) {
-          const text = (await t.textContent())?.trim();
-          if (text && text.length < 50) technologies.push(text);
+        let city: string | undefined;
+        let locationText = '';
+        if (tileEl) {
+          const allText = await tileEl.textContent();
+          const locationMatch = allText?.match(/([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+(?:\s*,\s*[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+)*)/);
+          if (locationMatch) {
+            locationText = locationMatch[1];
+            city = locationText.split(',')[0].trim();
+          }
         }
 
-        const combinedText = `${title} ${salaryText} ${locationText}`.toLowerCase();
+        let salaryMin: number | undefined;
+        let salaryMax: number | undefined;
+        if (tileEl) {
+          const allText = await tileEl.textContent();
+          const salaryMatch = allText?.match(/(\d[\d\s,.]*)\s*(?:-|–)\s*(\d[\d\s,.]*)\s*(?:zł|PLN)/i)
+            || allText?.match(/od\s+(\d[\d\s,.]*)\s*(?:zł|PLN)/i)
+            || allText?.match(/do\s+(\d[\d\s,.]*)\s*(?:zł|PLN)/i);
+          if (salaryMatch) {
+            const parse = (s: string) => parseFloat(s.replace(/\s/g, '').replace(',', '.'));
+            if (salaryMatch[2]) {
+              salaryMin = Math.round(parse(salaryMatch[1]));
+              salaryMax = Math.round(parse(salaryMatch[2]));
+            } else if (salaryMatch[1]) {
+              salaryMin = Math.round(parse(salaryMatch[1]));
+            }
+          }
+        }
+
+        const technologies: string[] = [];
+        if (tileEl) {
+          const tagEls = await tileEl.$$('span[class*="tag"], span[data-test*="tag"]');
+          for (const t of tagEls) {
+            const text = (await t.textContent())?.trim();
+            if (text && text.length < 40 && !text.includes('zł') && !text.includes('PLN')) {
+              technologies.push(text);
+            }
+          }
+        }
+
+        let descriptionText = '';
+        if (tileEl) {
+          const allText = await tileEl.textContent();
+          descriptionText = allText || '';
+        }
+
+        const combinedText = `${title} ${descriptionText}`.toLowerCase();
         const isRemote = combinedText.includes('remote') || combinedText.includes('zdaln');
         const isHybrid = combinedText.includes('hybrid') || combinedText.includes('hybryd');
 
-        const slug = sourceUrl.split('/').pop() ?? `${company}-${title}`.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const offerId = sourceUrl.match(/oferta,(\d+)/)?.[1] || sourceUrl.split('/').pop() || '';
 
         jobs.push({
           source: 'pracuj',
-          externalId: slug,
+          externalId: offerId,
           sourceUrl,
           title,
           company,
