@@ -79,6 +79,7 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
     company: '',
     publishedAfter: '',
     sources: [],
+    excludeSources: [],
   });
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);

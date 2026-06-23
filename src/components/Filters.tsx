@@ -74,6 +74,7 @@ export interface FilterState {
   company: string;
   publishedAfter: string;
   sources: string[];
+  excludeSources: string[];
 }
 
 const AVAILABLE_SOURCES = [
@@ -101,6 +102,7 @@ const DEFAULT_FILTERS: FilterState = {
   company: '',
   publishedAfter: '',
   sources: [],
+  excludeSources: [],
 };
 
 const DEFAULT_SECTIONS: Record<string, boolean> = {
@@ -135,10 +137,26 @@ export function Filters({ onFilter }: FiltersProps) {
 
   const handleSourceToggle = (sourceId: string) => {
     setFilters((prev) => {
-      const next = prev.sources.includes(sourceId)
-        ? prev.sources.filter((s) => s !== sourceId)
-        : [...prev.sources, sourceId];
-      return { ...prev, sources: next };
+      const isIncluded = prev.sources.includes(sourceId);
+      const isExcluded = prev.excludeSources.includes(sourceId);
+
+      if (isIncluded) {
+        return {
+          ...prev,
+          sources: prev.sources.filter((s) => s !== sourceId),
+          excludeSources: [...prev.excludeSources, sourceId],
+        };
+      } else if (isExcluded) {
+        return {
+          ...prev,
+          excludeSources: prev.excludeSources.filter((s) => s !== sourceId),
+        };
+      } else {
+        return {
+          ...prev,
+          sources: [...prev.sources, sourceId],
+        };
+      }
     });
   };
 
@@ -250,20 +268,26 @@ export function Filters({ onFilter }: FiltersProps) {
 
         <FilterSection title="Źródła" sectionKey="zrodla" defaultOpen={false} sections={sections} onToggle={handleSectionToggle}>
           <div className="flex flex-wrap gap-1.5">
-            {AVAILABLE_SOURCES.map((source) => (
-              <button
-                key={source.id}
-                onClick={() => handleSourceToggle(source.id)}
-                className={`inline-flex items-center gap-1.5 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2.5 py-1 rounded-md border transition-colors ${
-                  filters.sources.includes(source.id)
-                    ? 'border-accent/30 bg-accent/10 text-accent'
-                    : 'border-border bg-card text-muted-foreground'
-                }`}
+            {AVAILABLE_SOURCES.map((source) => {
+              const isIncluded = filters.sources.includes(source.id);
+              const isExcluded = filters.excludeSources.includes(source.id);
+              return (
+                <button
+                  key={source.id}
+                  onClick={() => handleSourceToggle(source.id)}
+                  className={`inline-flex items-center gap-1.5 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2.5 py-1 rounded-md border transition-colors ${
+                    isIncluded
+                      ? 'border-accent/30 bg-accent/10 text-accent'
+                      : isExcluded
+                        ? 'border-destructive/30 bg-destructive/10 text-destructive'
+                        : 'border-border bg-card text-muted-foreground'
+                  }`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${source.color}`} />
                 {source.label}
               </button>
-            ))}
+              );
+            })}
           </div>
         </FilterSection>
       </div>

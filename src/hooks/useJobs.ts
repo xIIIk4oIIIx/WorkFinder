@@ -56,6 +56,7 @@ function buildJobsUrl(
   if (filters.company) params.set('company', filters.company);
   if (filters.publishedAfter) params.set('publishedAfter', filters.publishedAfter);
   if (filters.sources.length > 0) params.set('source', filters.sources.join(','));
+  if (filters.excludeSources.length > 0) params.set('excludeSource', filters.excludeSources.join(','));
   if (showFavoritesOnly && favorites.size > 0) {
     params.set('ids', [...favorites].join(','));
   }

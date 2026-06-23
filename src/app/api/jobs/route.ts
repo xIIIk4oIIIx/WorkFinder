@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
   const company = searchParams.get('company') ?? '';
   const publishedAfter = searchParams.get('publishedAfter') ?? '';
   const sourceParam = searchParams.get('source') ?? '';
+  const excludeSourceParam = searchParams.get('excludeSource') ?? '';
   const idsParam = searchParams.get('ids') ?? '';
   const sortParam = searchParams.get('sort') ?? 'createdAt';
   const orderParam = searchParams.get('order') ?? 'desc';
@@ -102,6 +103,14 @@ export async function GET(request: NextRequest) {
   if (sourceParam) {
     const sources = sourceParam.split(',').map((s) => s.trim()).filter(Boolean);
     if (sources.length > 0) where.source = { in: sources };
+  }
+  if (excludeSourceParam) {
+    const excludeSources = excludeSourceParam.split(',').map((s) => s.trim()).filter(Boolean);
+    if (excludeSources.length > 0) {
+      where.source = where.source
+        ? { in: (where.source as any).in?.filter((s: string) => !excludeSources.includes(s)) ?? [] }
+        : { notIn: excludeSources };
+    }
   }
   if (idsParam) {
     const ids = idsParam.split(',').map((id) => id.trim()).filter(Boolean);
