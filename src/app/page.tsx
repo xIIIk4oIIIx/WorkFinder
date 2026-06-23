@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { SearchBar } from '@/components/SearchBar';
 import { Filters, FilterState } from '@/components/Filters';
+import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { JobTable } from '@/components/JobTable';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { useJobs } from '@/hooks/useJobs';
-import { useStats } from '@/hooks/useStats';
+import { useJobs, loadJobsCache, type JobsResponse } from '@/hooks/useJobs';
+import { useStats, loadStatsCache, type Stats } from '@/hooks/useStats';
 
 function getFavorites(): Set<string> {
   if (typeof window === 'undefined') return new Set();
@@ -19,7 +20,53 @@ function getFavorites(): Set<string> {
   }
 }
 
+function LoadingSpinner() {
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-4">
+        <svg className="w-10 h-10 animate-spin text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+          <polyline points="21 3 21 9 15 9" />
+        </svg>
+        <p className="text-sm text-muted-foreground font-medium">Ładowanie...</p>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
+  const [ready, setReady] = useState(false);
+  const [initialCache, setInitialCache] = useState<{
+    stats?: Stats;
+    jobs?: Record<string, JobsResponse>;
+    favorites: Set<string>;
+  }>({ favorites: new Set() });
+
+useEffect(() => {
+    // Load initial cache
+    const statsCache = loadStatsCache();
+    
+    // For jobs, we need to load the cache for the current URL
+    // Since we don't have the URL params yet, we'll pass undefined initially
+    // and let the useJobs hook handle it
+    setInitialCache({
+      stats: statsCache,
+      favorites: getFavorites()
+    });
+    setReady(true);
+  }, []);
+
+  if (!ready) return <LoadingSpinner />;
+
+  return <HomeContent initialStats={initialCache.stats} initialFavorites={initialCache.favorites} />;
+}
+
+interface HomeContentProps {
+  initialStats?: Stats;
+  initialFavorites: Set<string>;
+}
+
+function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -35,14 +82,10 @@ export default function Home() {
   });
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [favorites, setFavorites] = useState<Set<string>>(initialFavorites);
   const [syncing, setSyncing] = useState(false);
   const [syncElapsed, setSyncElapsed] = useState(0);
   const syncTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    setFavorites(getFavorites());
-  }, []);
 
   useEffect(() => {
     const handleStorageChange = () => setFavorites(getFavorites());
@@ -57,10 +100,10 @@ export default function Home() {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [search]);
 
-  const { jobs, total, totalPages, isLoading, isValidating, error, mutate: mutateJobs } = useJobs(
+  const { jobs, total, totalPages, isLoading, error, mutate: mutateJobs } = useJobs(
     page, debouncedSearch, filters, showFavoritesOnly, favorites
   );
-  const { stats, mutate: mutateStats } = useStats();
+  const { stats, mutate: mutateStats } = useStats(initialStats);
 
   const handleSearch = (query: string) => {
     setSearch(query);
@@ -76,17 +119,23 @@ export default function Home() {
     setSyncing(true);
     setSyncElapsed(0);
     const startTime = Date.now();
-    syncTimerRef.current = setInterval(() => {
+    const interval = setInterval(() => {
       setSyncElapsed(Math.floor((Date.now() - startTime) / 1000));
     }, 1000);
-    await fetch('/api/sync', { method: 'POST' });
-    await Promise.all([mutateJobs(), mutateStats()]);
-    if (syncTimerRef.current) clearInterval(syncTimerRef.current);
-    setSyncing(false);
+    
+    try {
+      await fetch('/api/sync', { method: 'POST' });
+      await Promise.all([mutateJobs(), mutateStats()]);
+    } finally {
+      clearInterval(interval);
+      setSyncing(false);
+    }
   };
 
   useEffect(() => {
-    return () => { if (syncTimerRef.current) clearInterval(syncTimerRef.current); };
+    return () => { 
+      // Clear interval is handled in handleSync finally block
+    };
   }, []);
 
   const handleFavoritesChange = () => {
@@ -102,31 +151,31 @@ export default function Home() {
 
             <div className="flex md:hidden items-center gap-3 text-xs">
               <div className="flex items-center gap-1">
-                <span className="font-bold text-foreground">{total.toLocaleString('pl-PL')}</span>
+                <span suppressHydrationWarning className="font-bold text-foreground"><AnimatedNumber value={total} /></span>
                 <span className="text-muted-foreground">ofert</span>
               </div>
               <div className="w-px h-3 bg-border" />
               <div className="flex items-center gap-1">
-                <span className="font-bold text-accent">+{stats?.todayNew ?? 0}</span>
+                <span suppressHydrationWarning className="font-bold text-accent">+<AnimatedNumber value={stats?.todayNew ?? 0} /></span>
                 <span className="text-muted-foreground">dziś</span>
               </div>
             </div>
 
             <div className="hidden md:grid grid-cols-4 gap-3">
               <div className="border border-border rounded-lg px-4 py-3 bg-background">
-                <div className="text-2xl font-bold tracking-tight font-[family-name:var(--font-geist-sans)]">{total.toLocaleString('pl-PL')}</div>
+                <div suppressHydrationWarning className="text-2xl font-bold tracking-tight font-[family-name:var(--font-geist-sans)]"><AnimatedNumber value={total} /></div>
                 <div className="text-xs text-muted-foreground font-medium">Łącznie ofert</div>
               </div>
               <div className="border border-border rounded-lg px-4 py-3 bg-background">
-                <div className="text-2xl font-bold tracking-tight font-[family-name:var(--font-geist-sans)] text-accent">+{stats?.todayNew ?? 0}</div>
+                <div suppressHydrationWarning className="text-2xl font-bold tracking-tight font-[family-name:var(--font-geist-sans)] text-accent">+<AnimatedNumber value={stats?.todayNew ?? 0} /></div>
                 <div className="text-xs text-muted-foreground font-medium">Nowe dziś</div>
               </div>
               <div className="border border-border rounded-lg px-4 py-3 bg-background">
-                <div className="text-2xl font-bold tracking-tight font-[family-name:var(--font-geist-sans)]">{stats?.bySource?.length ?? 0}</div>
+                <div suppressHydrationWarning className="text-2xl font-bold tracking-tight font-[family-name:var(--font-geist-sans)]"><AnimatedNumber value={stats?.bySource?.length ?? 0} /></div>
                 <div className="text-xs text-muted-foreground font-medium">Aktywne źródła</div>
               </div>
               <div className="border border-border rounded-lg px-4 py-3 bg-background">
-                <div className="text-2xl font-bold tracking-tight font-[family-name:var(--font-geist-sans)]">{stats?.lastSync ? new Date(stats.lastSync).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : '—'}</div>
+                <div suppressHydrationWarning className="text-2xl font-bold tracking-tight font-[family-name:var(--font-geist-sans)]">{stats?.lastSync ? new Date(stats.lastSync).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : '—'}</div>
                 <div className="text-xs text-muted-foreground font-medium">Ostatni sync</div>
               </div>
             </div>
@@ -165,8 +214,6 @@ export default function Home() {
                   <line x1="4" x2="4" y1="21" y2="14" /><line x1="4" x2="4" y1="10" y2="3" />
                   <line x1="12" x2="12" y1="21" y2="12" /><line x1="12" x2="12" y1="8" y2="3" />
                   <line x1="20" x2="20" y1="21" y2="16" /><line x1="20" x2="20" y1="12" y2="3" />
-                  <line x1="2" x2="6" y1="14" y2="14" /><line x1="10" x2="14" y1="8" y2="8" />
-                  <line x1="18" x2="22" y1="16" y2="16" />
                 </svg>
                 Filtry
               </button>
@@ -175,7 +222,7 @@ export default function Home() {
                 className={`flex items-center gap-2 px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
                   showFavoritesOnly
                     ? 'border-rose-300 bg-rose-50 text-rose-600'
-                    : 'border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground'
+                    : 'border-border bg-card text-muted-foreground hover:bg-muted hover:bg-muted hover:text-foreground'
                 }`}
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill={showFavoritesOnly ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -198,50 +245,7 @@ export default function Home() {
                 {error}
               </div>
             )}
-            {isLoading ? (
-              <div className="border border-border rounded-lg bg-card overflow-hidden">
-                <div className="hidden lg:block">
-                  <table className="w-full border-collapse text-sm">
-                    <thead>
-                      <tr className="border-b border-border bg-muted">
-                        <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap max-w-[260px]">Tytuł / Firma</th>
-                        <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Lokalizacja</th>
-                        <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Zarobki</th>
-                        <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Technologie</th>
-                        <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden xl:table-cell">Tryb</th>
-                        <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Źródło</th>
-                        <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden xl:table-cell">Data</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Array.from({ length: 8 }).map((_, i) => (
-                        <tr key={i} className="border-b border-border last:border-b-0">
-                          <td className="p-3"><div className="h-4 bg-muted rounded animate-pulse w-3/4" /><div className="h-3 bg-muted rounded animate-pulse w-1/2 mt-1.5" /></td>
-                          <td className="p-3"><div className="h-4 bg-muted rounded animate-pulse w-20" /></td>
-                          <td className="p-3"><div className="h-4 bg-muted rounded animate-pulse w-24" /></td>
-                          <td className="p-3"><div className="flex gap-1"><div className="h-5 bg-muted rounded animate-pulse w-14" /><div className="h-5 bg-muted rounded animate-pulse w-16" /></div></td>
-                          <td className="p-3 hidden xl:table-cell"><div className="h-5 bg-muted rounded-full animate-pulse w-20" /></td>
-                          <td className="p-3"><div className="h-5 bg-muted rounded animate-pulse w-20" /></td>
-                          <td className="p-3 hidden xl:table-cell"><div className="h-4 bg-muted rounded animate-pulse w-16" /></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="lg:hidden divide-y divide-border">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="p-4">
-                      <div className="h-4 bg-muted rounded animate-pulse w-3/4" />
-                      <div className="h-3 bg-muted rounded animate-pulse w-1/2 mt-2" />
-                      <div className="flex gap-2 mt-3">
-                        <div className="h-5 bg-muted rounded animate-pulse w-20" />
-                        <div className="h-5 bg-muted rounded-full animate-pulse w-16" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : jobs.length === 0 ? (
+            {jobs.length === 0 && !isLoading ? (
               <div className="text-center py-16 text-muted-foreground">
                 <div className="text-4xl mb-3">🔍</div>
                 <p className="font-medium text-foreground">

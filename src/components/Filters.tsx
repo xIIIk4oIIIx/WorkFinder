@@ -54,7 +54,9 @@ function FilterSection({ title, sectionKey, defaultOpen = true, sections, onTogg
           <path d="m6 9 6 6 6-6" />
         </svg>
       </button>
-      {open && children}
+      <div suppressHydrationWarning className={open ? '' : 'hidden'}>
+        {children}
+      </div>
     </div>
   );
 }

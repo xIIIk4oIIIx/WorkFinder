@@ -1,9 +1,9 @@
 import useSWR from 'swr';
-import { useRef, useCallback } from 'react';
+import { useState } from 'react';
 import type { Job, GroupedJob } from '@/types/job';
 import type { FilterState } from '@/components/Filters';
 
-interface JobsResponse {
+export interface JobsResponse {
   jobs: (Job | GroupedJob)[];
   pagination: {
     page: number;
@@ -20,7 +20,7 @@ function getCacheKey(url: string): string {
   return CACHE_PREFIX + url;
 }
 
-function loadCache(url: string): JobsResponse | undefined {
+export function loadJobsCache(url: string): JobsResponse | undefined {
   if (typeof window === 'undefined') return undefined;
   try {
     const stored = localStorage.getItem(getCacheKey(url));
@@ -72,28 +72,35 @@ export function useJobs(
   search: string,
   filters: FilterState,
   showFavoritesOnly: boolean,
-  favorites: Set<string>
+  favorites: Set<string>,
+  initialCache?: JobsResponse
 ) {
   const key = buildJobsUrl(page, search, filters, showFavoritesOnly, favorites);
-  const cacheRef = useRef<JobsResponse | undefined>(undefined);
-  if (cacheRef.current === undefined) {
-    cacheRef.current = loadCache(key);
-  }
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<JobsResponse>(key, fetcher, {
-    fallbackData: cacheRef.current,
+    fallbackData: initialCache,
+    revalidateOnMount: true,
     dedupingInterval: 2000,
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
     onSuccess: (d) => saveCache(key, d),
   });
 
+  // Prefer data with non-empty jobs to avoid showing empty list when we have cached jobs
+  const goodServerData = data?.jobs?.length ?? 0 > 0 ? data : null;
+  const goodCacheData = (initialCache ?? null)?.jobs?.length ?? 0 > 0 ? (initialCache ?? null) : null;
+  
+  const finalData = 
+    goodServerData ?? 
+    goodCacheData ?? 
+    (data ?? initialCache ?? null);
+
   const isInitialLoad = isLoading && !data;
 
   return {
-    jobs: data?.jobs ?? cacheRef.current?.jobs ?? [],
-    total: data?.pagination.allTotal ?? data?.pagination.total ?? cacheRef.current?.pagination.allTotal ?? cacheRef.current?.pagination.total ?? 0,
-    totalPages: data?.pagination.totalPages ?? cacheRef.current?.pagination.totalPages ?? 1,
+    jobs: finalData?.jobs ?? [],
+    total: finalData?.pagination.allTotal ?? finalData?.pagination.total ?? 0,
+    totalPages: finalData?.pagination.totalPages ?? 1,
     isLoading: isInitialLoad,
     isValidating,
     error: error?.message ?? null,
