@@ -25,6 +25,37 @@ async function getBrowser(): Promise<Browser> {
   return browser;
 }
 
+function parseSalaryNumber(s: string): number {
+  return Math.round(parseFloat(s.replace(/\s/g, '').replace(',', '.')));
+}
+
+const POLISH_CITIES = [
+  'Warszawa', 'Kraków', 'Wrocław', 'Poznań', 'Gdańsk', 'Łódź',
+  'Katowice', 'Szczecin', 'Lublin', 'Bydgoszcz', 'Białystok',
+  'Katowice', 'Gdynia', 'Częstochowa', 'Radom', 'Toruń',
+  'Sosnowiec', 'Rzeszów', 'Kielce', 'Gliwice', 'Zabrze',
+  'Olsztyn', 'Bielsko-Biała', 'Bytom', 'Zielona Góra', 'Rybnik',
+  'Ruda Śląska', 'Opole', 'Tychy', 'Gorzów', 'Elbląg',
+  'Płock', 'Dąbrowa Górnicza', 'Wałbrzych', 'Włocławek', 'Tarnów',
+  'Chorzów', 'Koszalin', 'Kalisz', 'Legnica', 'Jaworzno',
+  'Jelenia Góra', 'Nowy Sącz', 'Konin', 'Piotrków', 'Inowrocław',
+  'Lubin', 'Ostrów', 'Stargard', 'Gniezno', 'Otwock',
+  'Piła', 'Zamość', 'Leszno', 'Łomża', 'Chełm',
+  'Ełk', 'Ostrołęka', 'Stalowa Wola', 'Tarnobrzeg', 'Przemyśl',
+  'Tczew', 'Będzin', 'Pszczyna', 'Mysłowice', 'Zgorzelec',
+  'Sanok', 'Nysa', 'Brzeg', 'Piekary', 'Cieszyn',
+  'Starachowice', 'Zawiercie', 'Wodzisław', 'Częstochowa',
+  'Siedlce', 'Mińsk Mazowiecki', 'Ostrowiec', 'Puławy', 'Suwałki',
+];
+
+function findCity(text: string): string | undefined {
+  for (const city of POLISH_CITIES) {
+    if (text.includes(city)) return city;
+  }
+  const match = text.match(/\b([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]{2,})\b/);
+  return match?.[1];
+}
+
 async function scrapePage(url: string): Promise<JobOfferInput[]> {
   const b = await getBrowser();
   const context = await b.newContext({
@@ -46,72 +77,72 @@ async function scrapePage(url: string): Promise<JobOfferInput[]> {
         const title = titleAttr?.replace(/^Zobacz ofertę\s+/, '').trim();
         if (!title) continue;
 
-        const sourceUrl = await link.getAttribute('href');
-        if (!sourceUrl) continue;
+        const href = await link.getAttribute('href');
+        if (!href) continue;
+        const sourceUrl = href.split('?')[0];
 
-        const tile = await link.evaluateHandle((el) => el.closest('[class*="offer-tile"]') || el.parentElement?.parentElement?.parentElement);
-        const tileEl = tile.asElement();
+        const offerId = sourceUrl.match(/oferta,(\d+)/)?.[1];
+        if (!offerId) continue;
+
+        const tileHandle = await link.evaluateHandle((el) => {
+          let node = el as HTMLElement;
+          for (let i = 0; i < 10; i++) {
+            node = node.parentElement as HTMLElement;
+            if (!node) return el.parentElement?.parentElement?.parentElement?.parentElement || el;
+            const cn = node.className || '';
+            if (cn.includes('offer-tile') || cn.includes('cobg3mp') || cn.includes('cjkyq1p')) return node;
+          }
+          return el.parentElement?.parentElement?.parentElement?.parentElement || el;
+        });
+        const tileEl = tileHandle.asElement();
 
         let company = 'Unknown';
+        let city: string | undefined;
+        let salaryMin: number | undefined;
+        let salaryMax: number | undefined;
+        const technologies: string[] = [];
+
         if (tileEl) {
           const companyLink = await tileEl.$('[data-test="link-company-profile"]');
           if (companyLink) {
-            const companyTitle = await companyLink.getAttribute('title');
-            company = companyTitle?.replace(/^Zobacz profil pracodawcy\s+/, '').trim() || 'Unknown';
+            const ct = await companyLink.getAttribute('title');
+            company = ct?.replace(/^Zobacz profil pracodawcy\s+/, '').trim() || 'Unknown';
           }
-        }
 
-        let city: string | undefined;
-        let locationText = '';
-        if (tileEl) {
-          const allText = await tileEl.textContent();
-          const locationMatch = allText?.match(/([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+(?:\s*,\s*[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+)*)/);
-          if (locationMatch) {
-            locationText = locationMatch[1];
-            city = locationText.split(',')[0].trim();
-          }
-        }
+          const tileText = await tileEl.textContent() || '';
 
-        let salaryMin: number | undefined;
-        let salaryMax: number | undefined;
-        if (tileEl) {
-          const allText = await tileEl.textContent();
-          const salaryMatch = allText?.match(/(\d[\d\s,.]*)\s*(?:-|–)\s*(\d[\d\s,.]*)\s*(?:zł|PLN)/i)
-            || allText?.match(/od\s+(\d[\d\s,.]*)\s*(?:zł|PLN)/i)
-            || allText?.match(/do\s+(\d[\d\s,.]*)\s*(?:zł|PLN)/i);
+          const salaryMatch = tileText.match(/(\d[\d\s,.]*)\s*[–\-]\s*(\d[\d\s,.]*)\s*(?:zł|PLN)/i)
+            || tileText.match(/od\s+(\d[\d\s,.]*)\s*(?:zł|PLN)/i);
           if (salaryMatch) {
-            const parse = (s: string) => parseFloat(s.replace(/\s/g, '').replace(',', '.'));
             if (salaryMatch[2]) {
-              salaryMin = Math.round(parse(salaryMatch[1]));
-              salaryMax = Math.round(parse(salaryMatch[2]));
+              salaryMin = parseSalaryNumber(salaryMatch[1]);
+              salaryMax = parseSalaryNumber(salaryMatch[2]);
             } else if (salaryMatch[1]) {
-              salaryMin = Math.round(parse(salaryMatch[1]));
+              salaryMin = parseSalaryNumber(salaryMatch[1]);
             }
           }
-        }
 
-        const technologies: string[] = [];
-        if (tileEl) {
-          const tagEls = await tileEl.$$('span[class*="tag"], span[data-test*="tag"]');
+          city = findCity(tileText);
+
+          const tagEls = await tileEl.$$('span');
           for (const t of tagEls) {
             const text = (await t.textContent())?.trim();
-            if (text && text.length < 40 && !text.includes('zł') && !text.includes('PLN')) {
+            if (text && text.length >= 2 && text.length < 30
+              && !text.includes('zł') && !text.includes('PLN')
+              && !text.includes('Superoferta') && !text.includes('Publik')
+              && !text.includes('etatumowa') && !text.includes('specjalist')
+              && !text.includes('Menedżer') && !text.includes('Pracownik')
+              && !text.includes('Sprawdź') && !text.includes('Profil')
+              && text !== company && !text.includes('godz')
+              && !text.match(/^\d/)) {
               technologies.push(text);
             }
           }
         }
 
-        let descriptionText = '';
-        if (tileEl) {
-          const allText = await tileEl.textContent();
-          descriptionText = allText || '';
-        }
-
-        const combinedText = `${title} ${descriptionText}`.toLowerCase();
+        const combinedText = `${title}`.toLowerCase();
         const isRemote = combinedText.includes('remote') || combinedText.includes('zdaln');
         const isHybrid = combinedText.includes('hybrid') || combinedText.includes('hybryd');
-
-        const offerId = sourceUrl.match(/oferta,(\d+)/)?.[1] || sourceUrl.split('/').pop() || '';
 
         jobs.push({
           source: 'pracuj',
@@ -126,7 +157,7 @@ async function scrapePage(url: string): Promise<JobOfferInput[]> {
           salaryMin,
           salaryMax,
           salaryCurrency: 'PLN',
-          technologies,
+          technologies: technologies.slice(0, 10),
           description: undefined,
           publishedAt: undefined,
         });
