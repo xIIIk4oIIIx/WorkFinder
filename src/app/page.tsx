@@ -90,25 +90,38 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
   const drawerRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const isDrawerOpen = useRef(false);
 
-  useEffect(() => {
-    if (!overlayRef.current || !panelRef.current) return;
+  const openDrawer = useCallback(() => {
+    if (isDrawerOpen.current) return;
+    isDrawerOpen.current = true;
+    setMobileFiltersOpen(true);
 
-    const overlay = overlayRef.current;
-    const panel = panelRef.current;
+    requestAnimationFrame(() => {
+      if (!overlayRef.current || !panelRef.current) return;
+      overlayRef.current.style.backgroundColor = 'rgba(0,0,0,0.5)';
+      panelRef.current.style.transform = 'translate3d(0,0,0) scale(1)';
+      panelRef.current.style.boxShadow = '8px 0 40px rgba(0,0,0,0.25)';
+      panelRef.current.style.opacity = '1';
+    });
+  }, []);
 
-    if (mobileFiltersOpen) {
-      overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
-      panel.style.transform = 'translate3d(0,0,0) scale(1)';
-      panel.style.boxShadow = '8px 0 40px rgba(0,0,0,0.25)';
-      panel.style.opacity = '1';
-    } else {
-      overlay.style.backgroundColor = 'rgba(0,0,0,0)';
-      panel.style.transform = 'translate3d(-100%,0,0) scale(0.95)';
-      panel.style.boxShadow = 'none';
-      panel.style.opacity = '0.8';
+  const closeDrawer = useCallback(() => {
+    if (!isDrawerOpen.current) return;
+    isDrawerOpen.current = false;
+
+    if (!overlayRef.current || !panelRef.current) {
+      setMobileFiltersOpen(false);
+      return;
     }
-  }, [mobileFiltersOpen]);
+
+    overlayRef.current.style.backgroundColor = 'rgba(0,0,0,0)';
+    panelRef.current.style.transform = 'translate3d(-100%,0,0) scale(0.95)';
+    panelRef.current.style.boxShadow = 'none';
+    panelRef.current.style.opacity = '0.8';
+
+    setTimeout(() => setMobileFiltersOpen(false), 300);
+  }, []);
 
   useEffect(() => {
     const handleStorageChange = () => setFavorites(getFavorites());
@@ -232,7 +245,7 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
           <section className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-4">
               <button
-                onClick={() => setMobileFiltersOpen(true)}
+                onClick={openDrawer}
                 className="lg:hidden flex items-center gap-2 px-3 py-2 border border-border rounded-md bg-card text-foreground text-sm font-medium hover:bg-muted transition-colors"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -310,7 +323,7 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
             willChange: 'background-color',
           }}
           ref={overlayRef}
-          onClick={() => setMobileFiltersOpen(false)}
+          onClick={closeDrawer}
         />
         {/* Drawer panel */}
         <div
@@ -328,7 +341,7 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
         >
           <div className="flex items-center justify-end p-4 border-b border-border">
             <button
-              onClick={() => setMobileFiltersOpen(false)}
+              onClick={closeDrawer}
               className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-muted transition-colors"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -337,7 +350,7 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
             </button>
           </div>
           <div className="p-4">
-            <Filters onFilter={(f) => { handleFilter(f); setMobileFiltersOpen(false); }} />
+            <Filters onFilter={(f) => { handleFilter(f); closeDrawer(); }} />
           </div>
         </div>
       </div>
