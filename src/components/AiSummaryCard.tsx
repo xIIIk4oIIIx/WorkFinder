@@ -18,12 +18,27 @@ interface SummarySection {
   body: string;
 }
 
-const SECTION_CONFIG: Record<string, { icon: SummarySection['icon']; svg: string }> = {
-  'Co będziesz robić': { icon: 'blue', svg: '<rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>' },
-  'Co firma oferuje': { icon: 'green', svg: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>' },
-  'Na co zwrócić uwagę': { icon: 'orange', svg: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12" y1="17" y2="17"/>' },
-  'Zespół i praca': { icon: 'purple', svg: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>' },
-  'Perspektywy': { icon: 'teal', svg: '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>' },
+function SectionIcon({ type }: { type: SummarySection['icon'] }) {
+  switch (type) {
+    case 'blue':
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>;
+    case 'green':
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
+    case 'orange':
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>;
+    case 'purple':
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
+    case 'teal':
+      return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>;
+  }
+}
+
+const SECTION_CONFIG: Record<string, SummarySection['icon']> = {
+  'Co będziesz robić': 'blue',
+  'Co firma oferuje': 'green',
+  'Na co zwrócić uwagę': 'orange',
+  'Zespół i praca': 'purple',
+  'Perspektywy': 'teal',
 };
 
 function parseMarkdownToSections(markdown: string): SummarySection[] {
@@ -38,12 +53,12 @@ function parseMarkdownToSections(markdown: string): SummarySection[] {
       .trim();
     const body = lines.slice(1).join('\n').trim();
 
-    const config = Object.entries(SECTION_CONFIG).find(([key]) =>
+    const iconType = Object.entries(SECTION_CONFIG).find(([key]) =>
       titleLine.includes(key)
-    );
+    )?.[1];
 
     sections.push({
-      icon: config?.[1]?.icon ?? 'blue',
+      icon: iconType ?? 'blue',
       title: titleLine,
       body: parseInlineMarkdown(body),
     });
@@ -240,7 +255,7 @@ export function AiSummaryCard({ jobTitle, company, description, technologies, so
           <div key={i} className="ai-section">
             <div className="ai-section-header">
               <div className={`ai-section-icon ${section.icon}`}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(SECTION_CONFIG[section.title]?.svg ?? '') }} />
+                <SectionIcon type={section.icon} />
               </div>
               <div className="ai-section-title">{section.title}</div>
             </div>
