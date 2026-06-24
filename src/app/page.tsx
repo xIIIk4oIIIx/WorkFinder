@@ -274,29 +274,27 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
         </div>
       </main>
 
-      {mobileFiltersOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setMobileFiltersOpen(false)}
-          />
-          <div className="absolute inset-y-0 left-0 w-80 max-w-[85vw] bg-background shadow-xl overflow-y-auto">
-            <div className="flex items-center justify-end p-4 border-b border-border">
-              <button
-                onClick={() => setMobileFiltersOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-muted transition-colors"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 6 6 18" /><path d="m6 6 12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-4">
-              <Filters onFilter={(f) => { handleFilter(f); setMobileFiltersOpen(false); }} />
-            </div>
+      <div className={`fixed inset-0 z-50 lg:hidden transition-opacity duration-300 ${mobileFiltersOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        <div
+          className="absolute inset-0 bg-black/50"
+          onClick={() => setMobileFiltersOpen(false)}
+        />
+        <div className={`absolute inset-y-0 left-0 w-80 max-w-[85vw] bg-background shadow-xl overflow-y-auto transition-transform duration-300 ease-out ${mobileFiltersOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <div className="flex items-center justify-end p-4 border-b border-border">
+            <button
+              onClick={() => setMobileFiltersOpen(false)}
+              className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-muted transition-colors"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="p-4">
+            <Filters onFilter={(f) => { handleFilter(f); setMobileFiltersOpen(false); }} />
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
