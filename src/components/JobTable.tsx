@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Job, GroupedJob, JobSource } from '@/types/job';
 import { AiSummaryCard } from './AiSummaryCard';
 
@@ -109,9 +109,8 @@ function getSourceDots(sources: JobSource[]): { source: string; count: number }[
   return Array.from(map.entries()).map(([source, count]) => ({ source, count }));
 }
 
-function GroupedCard({ job, onFavoritesChange }: { job: GroupedJob; onFavoritesChange?: () => void }) {
+function GroupedCard({ job, onFavoritesChange, showSummary, onToggleSummary }: { job: GroupedJob; onFavoritesChange?: () => void; showSummary: boolean; onToggleSummary: () => void }) {
   const [expanded, setExpanded] = useState(false);
-  const [showSummary, setShowSummary] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const salary = getBestSalary(job);
   const modeClass = WORK_MODE_STYLES[job.workMode ?? ''] ?? 'bg-slate-100 text-slate-600';
@@ -158,7 +157,7 @@ function GroupedCard({ job, onFavoritesChange }: { job: GroupedJob; onFavoritesC
             </svg>
           </button>
           <button
-            onClick={() => setShowSummary(!showSummary)}
+            onClick={onToggleSummary}
             className={`w-8 h-8 flex items-center justify-center rounded border transition-colors ${
               showSummary
                 ? 'border-accent/30 bg-accent/10 text-accent'
@@ -333,7 +332,7 @@ function FlatCard({ job, onFavoritesChange }: { job: Job; onFavoritesChange?: ()
   );
 }
 
-function GroupedRow({ job, onFavoritesChange }: { job: GroupedJob; onFavoritesChange?: () => void }) {
+function GroupedRow({ job, onFavoritesChange, showSummary, onToggleSummary }: { job: GroupedJob; onFavoritesChange?: () => void; showSummary: boolean; onToggleSummary: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const salary = getBestSalary(job);
@@ -446,46 +445,40 @@ function GroupedRow({ job, onFavoritesChange }: { job: GroupedJob; onFavoritesCh
         </td>
       </tr>
 
-      <tr className={`${expanded ? '' : 'hidden'}`}>
+      <tr className={`${expanded || showSummary ? '' : 'hidden'}`}>
         <td className="p-3 pl-10" colSpan={7}>
-          <div className={`transition-all duration-300 ease-in-out ${expanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-            <div className="space-y-3 mb-3">
-              <AiSummaryCard
-                jobTitle={job.title}
-                company={job.company}
-                description={job.description}
-                technologies={job.technologies}
-                sourceUrl={primaryUrl}
-              />
-            </div>
+          <div className={`transition-all duration-300 ease-in-out ${expanded || showSummary ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+            {showSummary && (
+              <div className="space-y-3 mb-3">
+                <AiSummaryCard
+                  jobTitle={job.title}
+                  company={job.company}
+                  description={job.description}
+                  technologies={job.technologies}
+                  sourceUrl={primaryUrl}
+                />
+              </div>
+            )}
+            {expanded && job.sources.map((src) => {
+              const srcInfo = SOURCE_MAP[src.source] ?? { label: src.source, color: 'bg-muted' };
+              return (
+                <div key={src.id} className="flex items-center gap-3 flex-wrap py-2 border-t border-border first:border-t-0">
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${srcInfo.color}`} />
+                  <span className="text-[11px] font-[family-name:var(--font-mono)] font-medium text-muted-foreground">{srcInfo.label}</span>
+                  <a
+                    href={src.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-muted-foreground hover:text-accent hover:underline underline-offset-2 transition-colors font-[family-name:var(--font-mono)] break-all"
+                  >
+                    {src.sourceUrl ?? '—'}
+                  </a>
+                </div>
+              );
+            })}
           </div>
         </td>
       </tr>
-
-      {expanded && job.sources.map((src) => {
-        const srcInfo = SOURCE_MAP[src.source] ?? { label: src.source, color: 'bg-muted' };
-        return (
-          <tr key={src.id} className="border-b border-border last:border-b-0 bg-muted/30 hover:bg-muted/60 transition-colors">
-            <td className="p-3 pl-10" colSpan={7}>
-              <div className="flex items-center gap-3 flex-wrap">
-                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${srcInfo.color}`} />
-                <span className="text-[11px] font-[family-name:var(--font-mono)] font-medium text-muted-foreground">{srcInfo.label}</span>
-                <a
-                  href={src.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-muted-foreground hover:text-accent hover:underline underline-offset-2 transition-colors font-[family-name:var(--font-mono)] break-all"
-                >
-                  {src.sourceUrl ?? '—'}
-                </a>
-                <span className="text-[11px] text-muted-foreground font-[family-name:var(--font-mono)]">
-                  {relativeTime(src.publishedAt)}
-                </span>
-              </div>
-            </td>
-          </tr>
-        );
-      })}
     </>
   );
 }
@@ -579,7 +572,12 @@ function FlatRow({ job, onFavoritesChange }: { job: Job; onFavoritesChange?: () 
 
 export function JobTable({ jobs, total, page, totalPages, onPageChange, onFavoritesChange }: JobTableProps) {
   const [mounted, setMounted] = useState(false);
+  const [expandedSummary, setExpandedSummary] = useState<Record<string, boolean>>({});
   useEffect(() => { setMounted(true); }, []);
+
+  const toggleSummary = useCallback((jobId: string) => {
+    setExpandedSummary(prev => ({ ...prev, [jobId]: !prev[jobId] }));
+  }, []);
 
   const getPageNumbers = () => {
     const pages: (number | '...')[] = [];
@@ -653,7 +651,7 @@ export function JobTable({ jobs, total, page, totalPages, onPageChange, onFavori
         <div className="lg:hidden divide-y divide-border">
           {jobs.map((job) =>
             isGrouped(job) ? (
-              <GroupedCard key={job.id} job={job} onFavoritesChange={onFavoritesChange} />
+              <GroupedCard key={job.id} job={job} onFavoritesChange={onFavoritesChange} showSummary={expandedSummary[job.id] ?? false} onToggleSummary={() => toggleSummary(job.id)} />
             ) : (
               <FlatCard key={job.id} job={job} onFavoritesChange={onFavoritesChange} />
             )
@@ -677,7 +675,7 @@ export function JobTable({ jobs, total, page, totalPages, onPageChange, onFavori
             <tbody>
               {jobs.map((job) =>
                 isGrouped(job) ? (
-                  <GroupedRow key={job.id} job={job} onFavoritesChange={onFavoritesChange} />
+                  <GroupedRow key={job.id} job={job} onFavoritesChange={onFavoritesChange} showSummary={expandedSummary[job.id] ?? false} onToggleSummary={() => toggleSummary(job.id)} />
                 ) : (
                   <FlatRow key={job.id} job={job} onFavoritesChange={onFavoritesChange} />
                 )
