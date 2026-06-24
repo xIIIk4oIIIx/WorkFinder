@@ -120,19 +120,19 @@ function buildPrompt(
 
 Odpowiedz TYLKO w poniższym formacie Markdown:
 
-### 🎯 Co będziesz robić?
+### Co będziesz robić
 [2-3 zdania o faktycznych obowiązkach - nie tytuły stanowisk, tylko konkretne zadania]
 
-### 💎 Co firma oferuje oprócz pensji?
+### Co firma oferuje oprócz pensji
 [Benefity, szkolenia, atmosfera, ciekawe projekty - tylko to co jest w treści]
 
-### ⚠️ Na co zwrócić uwagę?
+### Na co zwrócić uwagę
 [Czerwone flagi: brak widełek, overload wymagań, niejasne warunki, lub pozytywne zaskoczenia]
 
-### 👥 Zespół i praca
+### Zespół i praca
 [Rozmiar zespołu, z kim współpracujesz, tryb pracy, godziny - jeśli wiadomo]
 
-### 🔮 Perspektywy
+### Perspektywy
 [Rozwój, ścieżka kariery, możliwość nauki - jeśli wynika z oferty]
 
 Zasady:

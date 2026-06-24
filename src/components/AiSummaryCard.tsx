@@ -32,7 +32,10 @@ function parseMarkdownToSections(markdown: string): SummarySection[] {
 
   for (const part of parts) {
     const lines = part.trim().split('\n');
-    const titleLine = lines[0].replace(/^[🎯💎⚠️👥🔮]\s*/, '').trim();
+    const titleLine = lines[0]
+      .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+      .replace(/[?!.,:;]/g, '')
+      .trim();
     const body = lines.slice(1).join('\n').trim();
 
     const config = Object.entries(SECTION_CONFIG).find(([key]) =>
