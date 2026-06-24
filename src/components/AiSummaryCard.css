@@ -11,6 +11,12 @@
   margin-bottom: 28px;
 }
 
+.ai-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .ai-badge {
   width: 36px;
   height: 36px;
@@ -87,7 +93,6 @@
   justify-content: center;
   flex-shrink: 0;
   font-size: 14px;
-  margin-bottom: 12px;
 }
 
 .ai-section-icon.green {
@@ -113,6 +118,19 @@
 .ai-section-icon.teal {
   background: oklch(0.72 0.14 180 / 0.15);
   color: oklch(0.72 0.14 180);
+}
+
+.ai-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.ai-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--foreground);
 }
 
 .ai-section-body {
@@ -197,10 +215,17 @@
   border-top: 1px solid var(--border);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
 }
 
-.ai-footer .dot {
+.ai-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -213,6 +238,12 @@
   color: var(--muted-foreground);
 }
 
+.ai-copied-msg {
+  font-size: 12px;
+  color: oklch(0.72 0.19 155);
+  font-weight: 500;
+}
+
 .ai-loading {
   display: flex;
   flex-direction: column;
@@ -220,6 +251,23 @@
   justify-content: center;
   padding: 48px 28px;
   gap: 16px;
+}
+
+.ai-loading-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ai-loading-text {
+  font-size: 14px;
+  color: var(--muted-foreground);
+}
+
+.ai-loading-step {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  opacity: 0.7;
 }
 
 .ai-loading-spinner {

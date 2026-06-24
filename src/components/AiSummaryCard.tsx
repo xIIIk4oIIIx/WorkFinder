@@ -1,0 +1,245 @@
+'use client';
+
+import { useState, useRef } from 'react';
+import './AiSummaryCard.css';
+
+interface AiSummaryCardProps {
+  jobTitle: string;
+  company: string;
+  description: string | null;
+  technologies: string[];
+  sourceUrl: string;
+}
+
+interface SummarySection {
+  icon: 'blue' | 'green' | 'purple' | 'orange' | 'teal';
+  title: string;
+  body: string;
+}
+
+const SECTION_CONFIG: Record<string, { icon: SummarySection['icon']; svg: string }> = {
+  'Co będziesz robić': { icon: 'blue', svg: '<rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>' },
+  'Co firma oferuje': { icon: 'green', svg: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>' },
+  'Na co zwrócić uwagę': { icon: 'orange', svg: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12" y1="17" y2="17"/>' },
+  'Zespół i praca': { icon: 'purple', svg: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>' },
+  'Perspektywy': { icon: 'teal', svg: '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>' },
+};
+
+function parseMarkdownToSections(markdown: string): SummarySection[] {
+  const sections: SummarySection[] = [];
+  const parts = markdown.split(/^### /m).filter(Boolean);
+
+  for (const part of parts) {
+    const lines = part.trim().split('\n');
+    const titleLine = lines[0].replace(/^[🎯💎⚠️👥🔮]\s*/, '').trim();
+    const body = lines.slice(1).join('\n').trim();
+
+    const config = Object.entries(SECTION_CONFIG).find(([key]) =>
+      titleLine.includes(key)
+    );
+
+    sections.push({
+      icon: config?.[1]?.icon ?? 'blue',
+      title: titleLine,
+      body: parseInlineMarkdown(body),
+    });
+  }
+
+  return sections;
+}
+
+function parseInlineMarkdown(text: string): string {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/gs, (match) => `<ul>${match}</ul>`)
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br/>')
+    .replace(/^/, '<p>')
+    .replace(/$/, '</p>');
+}
+
+export function AiSummaryCard({ jobTitle, company, description, technologies, sourceUrl }: AiSummaryCardProps) {
+  const [summary, setSummary] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [model, setModel] = useState('');
+  const [loadStep, setLoadStep] = useState(0);
+  const [loadMessage, setLoadMessage] = useState('');
+  const [copied, setCopied] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const fetchSummary = async () => {
+    setLoading(true);
+    setError(null);
+    setSummary('');
+    setLoadStep(1);
+
+    try {
+      const response = await fetch('/api/summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobTitle, company, description, technologies, sourceUrl }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (errorData.errorType === 'quota_exceeded') {
+          setError(errorData.message || 'Limit API Gemini wyczerpany');
+        } else {
+          setError(errorData.error || 'Nie udało się wygenerować podsumowania');
+        }
+        setLoading(false);
+        return;
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (reader) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].startsWith('event: ')) {
+            const eventType = lines[i].slice(7).trim();
+            const dataLine = lines[i + 1];
+            if (dataLine?.startsWith('data: ')) {
+              const data = JSON.parse(dataLine.slice(6));
+
+              if (eventType === 'progress') {
+                setLoadStep(data.step);
+                setLoadMessage(data.message);
+              } else if (eventType === 'done') {
+                setSummary(data.summary);
+                setModel(data.model);
+                setLoadStep(3);
+                setLoadMessage('Gotowe!');
+              } else if (eventType === 'error') {
+                if (data.errorType === 'quota_exceeded') {
+                  setError(data.message || 'Limit API Gemini wyczerpany');
+                } else {
+                  setError(data.error || 'Nie udało się wygenerować podsumowania');
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch {
+      setError('Błąd połączenia z serwerem');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCopy = async () => {
+    if (!summary) return;
+    await navigator.clipboard.writeText(summary);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const sections = summary ? parseMarkdownToSections(summary) : [];
+
+  return (
+    <div className="ai-summary-container">
+      <div className="ai-header">
+        <div className="ai-header-left">
+          <div className="ai-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <div>
+            <div className="ai-title">Podsumowanie AI</div>
+            <div className="ai-subtitle">Analiza oferty pracy</div>
+          </div>
+        </div>
+        <div className="ai-actions">
+          {!summary && !loading && (
+            <button className="ai-action-btn" onClick={fetchSummary} title="Wygeneruj">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="23 4 23 10 17 10"/>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+              </svg>
+            </button>
+          )}
+          {summary && (
+            <button className="ai-action-btn" onClick={fetchSummary} title="Odśwież">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="23 4 23 10 17 10"/>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+              </svg>
+            </button>
+          )}
+          {summary && (
+            <button className="ai-action-btn" onClick={handleCopy} title={copied ? 'Skopiowano!' : 'Kopiuj'}>
+              {copied ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 6 9 17l-5-5"/>
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                  <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                </svg>
+              )}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="ai-card">
+        {loading && (
+          <div className="ai-loading">
+            <div className="ai-loading-header">
+              <div className="ai-loading-spinner" />
+              <div className="ai-loading-text">{loadMessage || 'Pracuję...'}</div>
+            </div>
+            <div className="ai-loading-step">Krok {loadStep}/3</div>
+            <div className="ai-progress-bar">
+              <div className="ai-progress-fill" style={{ width: `${(loadStep / 3) * 100}%` }} />
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="ai-error">
+            <div className="ai-error-box">{error}</div>
+          </div>
+        )}
+
+        {sections.map((section, i) => (
+          <div key={i} className="ai-section">
+            <div className="ai-section-header">
+              <div className={`ai-section-icon ${section.icon}`}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: SECTION_CONFIG[section.title]?.svg ?? '' }} />
+              </div>
+              <div className="ai-section-title">{section.title}</div>
+            </div>
+            <div className="ai-section-body" dangerouslySetInnerHTML={{ __html: section.body }} />
+          </div>
+        ))}
+
+        {summary && (
+          <div className="ai-footer">
+            <div className="ai-footer-left">
+              <div className="ai-dot" />
+              <span>Wygenerowano przez AI • {model}</span>
+            </div>
+            {copied && <span className="ai-copied-msg">Skopiowano!</span>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
