@@ -99,12 +99,14 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
 
     if (mobileFiltersOpen) {
       overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
-      panel.style.transform = 'translate3d(0,0,0)';
-      panel.style.boxShadow = '0 0 50px rgba(0,0,0,0.3)';
+      panel.style.transform = 'translate3d(0,0,0) scale(1)';
+      panel.style.boxShadow = '8px 0 40px rgba(0,0,0,0.25)';
+      panel.style.opacity = '1';
     } else {
       overlay.style.backgroundColor = 'rgba(0,0,0,0)';
-      panel.style.transform = 'translate3d(-100%,0,0)';
+      panel.style.transform = 'translate3d(-100%,0,0) scale(0.95)';
       panel.style.boxShadow = 'none';
+      panel.style.opacity = '0.8';
     }
   }, [mobileFiltersOpen]);
 
@@ -297,13 +299,14 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
       <div
         ref={drawerRef}
         className={`fixed inset-0 z-50 lg:hidden ${mobileFiltersOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
+        style={{ perspective: '1200px' }}
       >
         {/* Overlay */}
         <div
           className="absolute inset-0"
           style={{
             backgroundColor: 'rgba(0,0,0,0)',
-            transition: 'background-color 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+            transition: 'background-color 180ms cubic-bezier(0.4, 0, 0.2, 1)',
             willChange: 'background-color',
           }}
           ref={overlayRef}
@@ -314,11 +317,13 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
           ref={panelRef}
           className="absolute inset-y-0 left-0 w-80 max-w-[85vw] bg-background overflow-y-auto"
           style={{
-            transform: 'translate3d(-100%,0,0)',
-            willChange: 'transform',
+            transform: 'translate3d(-100%,0,0) scale(0.95)',
+            transition: 'transform 240ms cubic-bezier(0.32, 0.72, 0, 1), box-shadow 240ms cubic-bezier(0.32, 0.72, 0, 1), opacity 180ms ease-out',
+            willChange: 'transform, box-shadow, opacity',
             WebkitBackfaceVisibility: 'hidden',
             backfaceVisibility: 'hidden',
             boxShadow: 'none',
+            opacity: '0.8',
           }}
         >
           <div className="flex items-center justify-end p-4 border-b border-border">
