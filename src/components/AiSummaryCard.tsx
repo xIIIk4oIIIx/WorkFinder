@@ -183,14 +183,6 @@ export function AiSummaryCard({ jobTitle, company, description, technologies, so
           </div>
         </div>
         <div className="ai-actions">
-          {!summary && !loading && (
-            <button className="ai-action-btn" onClick={fetchSummary} title="Wygeneruj">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="23 4 23 10 17 10"/>
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-              </svg>
-            </button>
-          )}
           {summary && (
             <button className="ai-action-btn" onClick={fetchSummary} title="Odśwież">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -217,6 +209,19 @@ export function AiSummaryCard({ jobTitle, company, description, technologies, so
       </div>
 
       <div className="ai-card">
+        {!summary && !loading && !error && (
+          <div className="p-4">
+            <button
+              onClick={fetchSummary}
+              className="w-full flex items-center justify-center gap-2 text-xs text-accent hover:text-accent/80 transition-colors"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
+              </svg>
+              <span>Wygeneruj podsumowanie AI</span>
+            </button>
+          </div>
+        )}
         {loading && (
           <div className="ai-loading">
             <div className="ai-loading-header">
