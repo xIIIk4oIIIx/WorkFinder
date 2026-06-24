@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { SearchBar } from '@/components/SearchBar';
 import { Filters, FilterState } from '@/components/Filters';
 import { AnimatedNumber } from '@/components/AnimatedNumber';
@@ -87,6 +87,26 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
   const [syncing, setSyncing] = useState(false);
   const [syncElapsed, setSyncElapsed] = useState(0);
   const syncTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!overlayRef.current || !panelRef.current) return;
+
+    const overlay = overlayRef.current;
+    const panel = panelRef.current;
+
+    if (mobileFiltersOpen) {
+      overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+      panel.style.transform = 'translate3d(0,0,0)';
+      panel.style.boxShadow = '0 0 50px rgba(0,0,0,0.3)';
+    } else {
+      overlay.style.backgroundColor = 'rgba(0,0,0,0)';
+      panel.style.transform = 'translate3d(-100%,0,0)';
+      panel.style.boxShadow = 'none';
+    }
+  }, [mobileFiltersOpen]);
 
   useEffect(() => {
     const handleStorageChange = () => setFavorites(getFavorites());
@@ -275,28 +295,30 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
       </main>
 
       <div
+        ref={drawerRef}
         className={`fixed inset-0 z-50 lg:hidden ${mobileFiltersOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
-        style={{ willChange: 'auto' }}
       >
         {/* Overlay */}
         <div
-          className="absolute inset-0 bg-black/50"
+          className="absolute inset-0"
           style={{
-            opacity: mobileFiltersOpen ? 1 : 0,
-            transition: 'opacity 250ms cubic-bezier(0.4, 0, 0.2, 1)',
-            willChange: 'opacity',
+            backgroundColor: 'rgba(0,0,0,0)',
+            transition: 'background-color 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+            willChange: 'background-color',
           }}
+          ref={overlayRef}
           onClick={() => setMobileFiltersOpen(false)}
         />
         {/* Drawer panel */}
         <div
-          className="absolute inset-y-0 left-0 w-80 max-w-[85vw] bg-background shadow-2xl overflow-y-auto"
+          ref={panelRef}
+          className="absolute inset-y-0 left-0 w-80 max-w-[85vw] bg-background overflow-y-auto"
           style={{
-            transform: mobileFiltersOpen ? 'translate3d(0,0,0)' : 'translate3d(-100%,0,0)',
-            transition: 'transform 280ms cubic-bezier(0.32, 0.72, 0, 1)',
+            transform: 'translate3d(-100%,0,0)',
             willChange: 'transform',
             WebkitBackfaceVisibility: 'hidden',
             backfaceVisibility: 'hidden',
+            boxShadow: 'none',
           }}
         >
           <div className="flex items-center justify-end p-4 border-b border-border">
