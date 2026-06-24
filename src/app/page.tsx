@@ -274,12 +274,31 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
         </div>
       </main>
 
-      <div className={`fixed inset-0 z-50 lg:hidden transition-opacity duration-300 ${mobileFiltersOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+      <div
+        className={`fixed inset-0 z-50 lg:hidden ${mobileFiltersOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
+        style={{ willChange: 'auto' }}
+      >
+        {/* Overlay */}
         <div
           className="absolute inset-0 bg-black/50"
+          style={{
+            opacity: mobileFiltersOpen ? 1 : 0,
+            transition: 'opacity 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+            willChange: 'opacity',
+          }}
           onClick={() => setMobileFiltersOpen(false)}
         />
-        <div className={`absolute inset-y-0 left-0 w-80 max-w-[85vw] bg-background shadow-xl overflow-y-auto transition-transform duration-300 ease-out ${mobileFiltersOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        {/* Drawer panel */}
+        <div
+          className="absolute inset-y-0 left-0 w-80 max-w-[85vw] bg-background shadow-2xl overflow-y-auto"
+          style={{
+            transform: mobileFiltersOpen ? 'translate3d(0,0,0)' : 'translate3d(-100%,0,0)',
+            transition: 'transform 280ms cubic-bezier(0.32, 0.72, 0, 1)',
+            willChange: 'transform',
+            WebkitBackfaceVisibility: 'hidden',
+            backfaceVisibility: 'hidden',
+          }}
+        >
           <div className="flex items-center justify-end p-4 border-b border-border">
             <button
               onClick={() => setMobileFiltersOpen(false)}
