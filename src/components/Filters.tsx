@@ -85,10 +85,6 @@ const AVAILABLE_SOURCES = [
   { id: 'rocketjobs', label: 'RocketJobs', color: 'bg-cyan-500' },
   { id: 'jooble', label: 'Jooble', color: 'bg-emerald-500' },
   { id: 'pracuj', label: 'Pracuj.pl', color: 'bg-rose-500' },
-  { id: 'aplikuj', label: 'Aplikuj.pl', color: 'bg-yellow-500' },
-  { id: 'infopraca', label: 'InfoPraca', color: 'bg-indigo-500' },
-  { id: 'praca.pl', label: 'Praca.pl', color: 'bg-pink-500' },
-  { id: 'indeed', label: 'Indeed', color: 'bg-blue-600' },
 ];
 
 const WORK_MODE_OPTIONS = [
