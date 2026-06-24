@@ -77,7 +77,11 @@ export function useJobs(
 ) {
   const key = buildJobsUrl(page, search, filters, showFavoritesOnly, favorites);
 
-  const { data, error, isLoading, isValidating, mutate } = useSWR<JobsResponse>(key, fetcher, {
+  const { data, error, isLoading, isValidating, mutate } = useSWR<JobsResponse>(key, async (url) => {
+    const res = await fetcher(url);
+    console.log('[SWR]', url, '→ total:', res.pagination.allTotal);
+    return res;
+  }, {
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
     revalidateIfStale: true,
@@ -88,6 +92,8 @@ export function useJobs(
   const finalData = data ?? null;
 
   const isInitialLoad = isLoading && !data;
+  const displayTotal = finalData?.pagination.allTotal ?? finalData?.pagination.total ?? 0;
+  console.log('[useJobs] key:', key, '→ displayTotal:', displayTotal);
 
   return {
     jobs: finalData?.jobs ?? [],

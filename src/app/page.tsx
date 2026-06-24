@@ -104,6 +104,7 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
   const { jobs, total, totalPages, isLoading, error, mutate: mutateJobs } = useJobs(
     page, debouncedSearch, filters, showFavoritesOnly, favorites
   );
+  console.log('[Home] filters:', JSON.stringify(filters), '→ total:', total);
   const { stats, mutate: mutateStats } = useStats(initialStats);
 
   const handleSearch = (query: string) => {
