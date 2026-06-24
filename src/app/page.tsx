@@ -22,7 +22,7 @@ function getFavorites(): Set<string> {
 
 function LoadingSpinner() {
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-background">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white dark:bg-background">
       <div className="flex flex-col items-center gap-4">
         <svg className="w-10 h-10 animate-spin text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 12a9 9 0 1 1-6.219-8.56" />
