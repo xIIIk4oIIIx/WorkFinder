@@ -49,15 +49,33 @@ function parseMarkdownToSections(markdown: string): SummarySection[] {
 }
 
 function parseInlineMarkdown(text: string): string {
-  return text
+  const result = text
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/^- (.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.*<\/li>\n?)+/gs, (match) => `<ul>${match}</ul>`)
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/\n/g, '<br/>')
-    .replace(/^/, '<p>')
-    .replace(/$/, '</p>');
+    .replace(/^- (.+)$/gm, '<li>$1</li>');
+
+  const lines = result.split('\n');
+  const processed: string[] = [];
+  let inList = false;
+
+  for (const line of lines) {
+    if (line.startsWith('<li>')) {
+      if (!inList) {
+        processed.push('<ul>');
+        inList = true;
+      }
+      processed.push(line);
+    } else {
+      if (inList) {
+        processed.push('</ul>');
+        inList = false;
+      }
+      processed.push(line);
+    }
+  }
+  if (inList) processed.push('</ul>');
+
+  return '<p>' + processed.join('\n').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br/>') + '</p>';
 }
 
 export function AiSummaryCard({ jobTitle, company, description, technologies, sourceUrl }: AiSummaryCardProps) {
