@@ -7,6 +7,10 @@ import { justjoinScraper } from './justjoin';
 import { rocketjobsScraper } from './rocketjobs';
 import { joobleScraper } from './jooble';
 import { pracujScraper } from './pracuj';
+import { aplikujScraper } from './aplikuj';
+import { infopracaScraper } from './infopraca';
+import { pracaPlScraper } from './praca-pl';
+import { indeedScraper } from './indeed';
 
 const scrapers: Scraper[] = [];
 
@@ -21,6 +25,10 @@ registerScraper(justjoinScraper);
 registerScraper(rocketjobsScraper);
 registerScraper(joobleScraper);
 registerScraper(pracujScraper);
+registerScraper(aplikujScraper);
+registerScraper(infopracaScraper);
+registerScraper(pracaPlScraper);
+registerScraper(indeedScraper);
 
 export async function runAllScrapers(): Promise<{
   total: number;
