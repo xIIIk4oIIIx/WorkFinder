@@ -78,10 +78,10 @@ export function useJobs(
   const key = buildJobsUrl(page, search, filters, showFavoritesOnly, favorites);
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<JobsResponse>(key, fetcher, {
-    revalidateOnMount: true,
-    dedupingInterval: 2000,
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
+    revalidateIfStale: true,
+    dedupingInterval: 0,
     onSuccess: (d) => saveCache(key, d),
   });
 

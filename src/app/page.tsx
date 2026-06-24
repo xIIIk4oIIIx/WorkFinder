@@ -106,14 +106,6 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
   );
   const { stats, mutate: mutateStats } = useStats(initialStats);
 
-  const prevFiltersRef = useRef(filters);
-  useEffect(() => {
-    if (prevFiltersRef.current !== filters) {
-      prevFiltersRef.current = filters;
-      mutateJobs();
-    }
-  }, [filters, mutateJobs]);
-
   const handleSearch = (query: string) => {
     setSearch(query);
     setPage(1);
