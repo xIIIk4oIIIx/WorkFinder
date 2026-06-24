@@ -106,6 +106,8 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
   );
   const { stats, mutate: mutateStats } = useStats(initialStats);
 
+  if (total === 0 && isLoading) return <LoadingSpinner />;
+
   const handleSearch = (query: string) => {
     setSearch(query);
     setPage(1);
