@@ -106,6 +106,12 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
   );
   const { stats, mutate: mutateStats } = useStats(initialStats);
 
+  useEffect(() => {
+    return () => { 
+      // Clear interval is handled in handleSync finally block
+    };
+  }, []);
+
   if (total === 0 && isLoading) return <LoadingSpinner />;
 
   const handleSearch = (query: string) => {
@@ -134,12 +140,6 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
       setSyncing(false);
     }
   };
-
-  useEffect(() => {
-    return () => { 
-      // Clear interval is handled in handleSync finally block
-    };
-  }, []);
 
   const handleFavoritesChange = () => {
     setFavorites(getFavorites());
