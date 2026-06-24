@@ -95,6 +95,11 @@
   font-size: 14px;
 }
 
+.ai-section-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
 .ai-section-icon.green {
   background: oklch(0.72 0.19 155 / 0.15);
   color: oklch(0.72 0.19 155);
