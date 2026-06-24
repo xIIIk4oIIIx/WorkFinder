@@ -99,10 +99,23 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
 
     requestAnimationFrame(() => {
       if (!overlayRef.current || !panelRef.current) return;
-      overlayRef.current.style.backgroundColor = 'rgba(0,0,0,0.5)';
-      panelRef.current.style.transform = 'translate3d(0,0,0) scale(1)';
-      panelRef.current.style.boxShadow = '8px 0 40px rgba(0,0,0,0.25)';
-      panelRef.current.style.opacity = '1';
+      const panel = panelRef.current;
+
+      panel.style.transition = 'none';
+      panel.style.transform = 'translate3d(-100%,0,0) scale(0.95)';
+      panel.style.boxShadow = 'none';
+      panel.style.opacity = '0.8';
+      overlayRef.current.style.backgroundColor = 'rgba(0,0,0,0)';
+      overlayRef.current.offsetHeight;
+
+      requestAnimationFrame(() => {
+        panel.style.transition = 'transform 225ms cubic-bezier(0.0, 0.0, 0.2, 1), box-shadow 225ms cubic-bezier(0.0, 0.0, 0.2, 1), opacity 200ms ease-out';
+        overlayRef.current!.style.transition = 'background-color 225ms cubic-bezier(0.0, 0.0, 0.2, 1)';
+        panel.style.transform = 'translate3d(0,0,0) scale(1)';
+        panel.style.boxShadow = '8px 0 40px rgba(0,0,0,0.25)';
+        panel.style.opacity = '1';
+        overlayRef.current!.style.backgroundColor = 'rgba(0,0,0,0.5)';
+      });
     });
   }, []);
 
@@ -115,12 +128,23 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
       return;
     }
 
-    overlayRef.current.style.backgroundColor = 'rgba(0,0,0,0)';
-    panelRef.current.style.transform = 'translate3d(-100%,0,0) scale(0.95)';
-    panelRef.current.style.boxShadow = 'none';
-    panelRef.current.style.opacity = '0.8';
+    const panel = panelRef.current;
+    const overlay = overlayRef.current;
 
-    setTimeout(() => setMobileFiltersOpen(false), 300);
+    panel.style.transition = 'none';
+    overlay.style.transition = 'none';
+    panel.offsetHeight;
+
+    requestAnimationFrame(() => {
+      panel.style.transition = 'transform 195ms cubic-bezier(0.4, 0.0, 1, 1), box-shadow 195ms cubic-bezier(0.4, 0.0, 1, 1), opacity 150ms ease-in';
+      overlay.style.transition = 'background-color 195ms cubic-bezier(0.4, 0.0, 1, 1)';
+      panel.style.transform = 'translate3d(-100%,0,0) scale(0.95)';
+      panel.style.boxShadow = 'none';
+      panel.style.opacity = '0.8';
+      overlay.style.backgroundColor = 'rgba(0,0,0,0)';
+    });
+
+    setTimeout(() => setMobileFiltersOpen(false), 200);
   }, []);
 
   useEffect(() => {
@@ -331,7 +355,6 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
           className="absolute inset-y-0 left-0 w-80 max-w-[85vw] bg-background overflow-y-auto"
           style={{
             transform: 'translate3d(-100%,0,0) scale(0.95)',
-            transition: 'transform 240ms cubic-bezier(0.32, 0.72, 0, 1), box-shadow 240ms cubic-bezier(0.32, 0.72, 0, 1), opacity 180ms ease-out',
             willChange: 'transform, box-shadow, opacity',
             WebkitBackfaceVisibility: 'hidden',
             backfaceVisibility: 'hidden',
