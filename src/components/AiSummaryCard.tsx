@@ -168,30 +168,28 @@ export function AiSummaryCard({ jobTitle, company, description, technologies, so
 
   return (
     <div className="ai-summary-container">
-      <div className="ai-header">
-        <div className="ai-header-left">
-          <div className="ai-badge">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-              <path d="M2 17l10 5 10-5"/>
-              <path d="M2 12l10 5 10-5"/>
-            </svg>
+      {summary && (
+        <div className="ai-header">
+          <div className="ai-header-left">
+            <div className="ai-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <div>
+              <div className="ai-title">Podsumowanie AI</div>
+              <div className="ai-subtitle">Analiza oferty pracy</div>
+            </div>
           </div>
-          <div>
-            <div className="ai-title">Podsumowanie AI</div>
-            <div className="ai-subtitle">Analiza oferty pracy</div>
-          </div>
-        </div>
-        <div className="ai-actions">
-          {summary && (
+          <div className="ai-actions">
             <button className="ai-action-btn" onClick={fetchSummary} title="Odśwież">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="23 4 23 10 17 10"/>
                 <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
               </svg>
             </button>
-          )}
-          {summary && (
             <button className="ai-action-btn" onClick={handleCopy} title={copied ? 'Skopiowano!' : 'Kopiuj'}>
               {copied ? (
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -204,9 +202,9 @@ export function AiSummaryCard({ jobTitle, company, description, technologies, so
                 </svg>
               )}
             </button>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="ai-card">
         {!summary && !loading && !error && (
