@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import './AiSummaryCard.css';
 
 interface AiSummaryCardProps {
@@ -236,11 +237,11 @@ export function AiSummaryCard({ jobTitle, company, description, technologies, so
           <div key={i} className="ai-section">
             <div className="ai-section-header">
               <div className={`ai-section-icon ${section.icon}`}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: SECTION_CONFIG[section.title]?.svg ?? '' }} />
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(SECTION_CONFIG[section.title]?.svg ?? '') }} />
               </div>
               <div className="ai-section-title">{section.title}</div>
             </div>
-            <div className="ai-section-body" dangerouslySetInnerHTML={{ __html: section.body }} />
+            <div className="ai-section-body" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(section.body) }} />
           </div>
         ))}
 

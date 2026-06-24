@@ -158,6 +158,30 @@ export async function POST(request: NextRequest) {
 
   const { jobTitle, company, description, technologies, sourceUrl } = await request.json();
 
+  const ALLOWED_DOMAINS = [
+    'pracuj.pl', 'it.pracuj.pl', 'www.pracuj.pl',
+    'justjoin.it', 'www.justjoin.it',
+    'nofluffjobs.com', 'www.nofluffjobs.com',
+    'olx.pl', 'www.olx.pl',
+    'bulldogjob.com', 'www.bulldogjob.com',
+    'rocketjobs.pl', 'www.rocketjobs.pl',
+    'linkedin.com', 'www.linkedin.com',
+  ];
+
+  if (sourceUrl) {
+    try {
+      const url = new URL(sourceUrl);
+      if (url.protocol !== 'https:') {
+        return new Response(JSON.stringify({ error: 'Dozwolone tylko HTTPS' }), { status: 400 });
+      }
+      if (!ALLOWED_DOMAINS.includes(url.hostname)) {
+        return new Response(JSON.stringify({ error: 'Niedozwolona domena' }), { status: 403 });
+      }
+    } catch {
+      return new Response(JSON.stringify({ error: 'Nieprawidłowy URL' }), { status: 400 });
+    }
+  }
+
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
