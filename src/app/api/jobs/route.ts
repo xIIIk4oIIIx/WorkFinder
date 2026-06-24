@@ -95,8 +95,8 @@ export async function GET(request: NextRequest) {
     const workModes = workModeParam.split(',').map((m) => m.trim()).filter(Boolean);
     if (workModes.length > 0) where.workMode = { in: workModes };
   }
-  if (salaryMin) where.salaryMin = { gte: salaryMin };
-  if (salaryMax) where.salaryMax = { lte: salaryMax };
+  if (salaryMin && salaryMin > 0) where.salaryMin = { gte: salaryMin };
+  if (salaryMax && salaryMax < 100000) where.salaryMax = { lte: salaryMax };
   if (company) where.company = { contains: company, mode: 'insensitive' };
   if (publishedAfter)
     where.publishedAt = { gte: new Date(publishedAfter) };
