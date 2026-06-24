@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import type { Job, GroupedJob, JobSource } from '@/types/job';
+import { AiSummaryCard } from './AiSummaryCard';
 
 interface JobTableProps {
   jobs: (Job | GroupedJob)[];
@@ -48,22 +49,6 @@ function toggleFavorite(jobId: string): Set<string> {
   }
   localStorage.setItem('workfinder-favorites', JSON.stringify([...favorites]));
   return favorites;
-}
-
-function parseMarkdown(text: string): string {
-  return text
-    // Headers ### → <h3>
-    .replace(/^### (.+)$/gm, '<h3 class="text-sm font-bold text-foreground mt-3 mb-1.5 flex items-center gap-1.5">$1</h3>')
-    // Bold **text** → <strong>
-    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>')
-    // Italic *text* → <em>
-    .replace(/\*(.+?)\*/g, '<em class="text-muted-foreground/80">$1</em>')
-    // List items * → <li>
-    .replace(/^\* (.+)$/gm, '<li class="ml-4 list-disc text-foreground/90 leading-relaxed">$1</li>')
-    // Wrap consecutive <li> in <ul>
-    .replace(/((?:<li[^>]*>.*?<\/li>\n?)+)/g, '<ul class="my-1.5 space-y-0.5">$1</ul>')
-    // Line breaks
-    .replace(/\n/g, '<br />');
 }
 
 function relativeTime(dateStr: string | null): string {
@@ -124,241 +109,6 @@ function getSourceDots(sources: JobSource[]): { source: string; count: number }[
   return Array.from(map.entries()).map(([source, count]) => ({ source, count }));
 }
 
-interface AiSummaryProps {
-  jobTitle: string;
-  company: string;
-  description: string | null;
-  technologies: string[];
-  sourceUrl: string;
-}
-
-function AiSummarySection({ jobTitle, company, description, technologies, sourceUrl }: AiSummaryProps) {
-  const [summary, setSummary] = useState<string | null>(null);
-  const [summaryLoading, setSummaryLoading] = useState(false);
-  const [summaryError, setSummaryError] = useState<string | null>(null);
-  const [model, setModel] = useState<string | null>(null);
-  const [loadStep, setLoadStep] = useState(0);
-  const [loadMessage, setLoadMessage] = useState('');
-  const [copied, setCopied] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  const fetchSummary = async (force = false) => {
-    if ((!force && summary) || summaryLoading) return;
-    setSummaryLoading(true);
-    setSummaryError(null);
-    setLoadStep(0);
-    setLoadMessage('');
-
-    try {
-      const res = await fetch('/api/summary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jobTitle,
-          company,
-          description,
-          technologies,
-          sourceUrl,
-        }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        if (errorData.errorType === 'quota_exceeded') {
-          setSummaryError(errorData.message || 'Limit API Gemini wyczerpany');
-        } else {
-          setSummaryError(errorData.error || 'Nie udało się wygenerować podsumowania');
-        }
-        setSummaryLoading(false);
-        return;
-      }
-
-      const reader = res.body?.getReader();
-      if (!reader) throw new Error('No reader');
-
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          if (line.startsWith('event: ')) {
-            const eventType = line.slice(7);
-            const dataLine = lines[lines.indexOf(line) + 1];
-            if (dataLine?.startsWith('data: ')) {
-              const data = JSON.parse(dataLine.slice(6));
-
-              if (eventType === 'progress') {
-                setLoadStep(data.step);
-                setLoadMessage(data.message);
-              } else if (eventType === 'done') {
-                setSummary(data.summary);
-                setModel(data.model || null);
-                setLoadStep(3);
-                setLoadMessage('Gotowe!');
-              } else if (eventType === 'error') {
-                if (data.errorType === 'quota_exceeded') {
-                  setSummaryError(data.message || 'Limit API Gemini wyczerpany');
-                } else {
-                  setSummaryError(data.error || 'Nie udało się wygenerować podsumowania');
-                }
-              }
-            }
-          }
-        }
-      }
-    } catch {
-      setSummaryError('Błąd połączenia z serwerem');
-    } finally {
-      setSummaryLoading(false);
-      setTimeout(() => {
-        setLoadStep(0);
-        setLoadMessage('');
-      }, 500);
-    }
-  };
-
-  const handleCopy = async () => {
-    if (!summary) return;
-    await navigator.clipboard.writeText(summary);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const loadSteps = [
-    'Pobieram stronę...',
-    'Przygotowuję dane...',
-    'Generuję podsumowanie...',
-    'Gotowe!',
-  ];
-
-  return (
-    <div className="bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-sm hover:border-accent/30">
-      {!summary && !summaryLoading && !summaryError && (
-        <div className="p-4">
-          <button
-            onClick={() => fetchSummary()}
-            className="w-full flex items-center justify-center gap-2 text-xs text-accent hover:text-accent/80 transition-colors"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
-            </svg>
-            <span>Wygeneruj podsumowanie AI</span>
-          </button>
-        </div>
-      )}
-
-      {(summary || summaryLoading || summaryError) && (
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center">
-                <svg className="w-3.5 h-3.5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
-                </svg>
-              </div>
-              <span className="text-xs font-bold text-foreground uppercase tracking-wider">Podsumowanie AI</span>
-            </div>
-            <div className="flex items-center gap-1">
-              {summary && !summaryLoading && (
-                <>
-                  <button
-                    onClick={handleCopy}
-                    className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:bg-accent/10 hover:text-accent transition-colors"
-                    title="Kopiuj"
-                  >
-                    {copied ? (
-                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M20 6 9 17l-5-5" />
-                      </svg>
-                    ) : (
-                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                      </svg>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => fetchSummary(true)}
-                    className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:bg-accent/10 hover:text-accent transition-colors"
-                    title="Odśwież"
-                  >
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                      <polyline points="21 3 21 9 15 9" />
-                    </svg>
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-
-          {summaryLoading && (
-            <div className="space-y-2 py-1">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <svg className="w-3.5 h-3.5 animate-spin text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                </svg>
-                <span>{loadMessage || loadSteps[loadStep - 1] || 'Inicjalizuję...'}</span>
-              </div>
-              <div className="flex gap-1">
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
-                      i <= loadStep ? 'bg-accent' : 'bg-accent/20'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {summaryError && (
-            <div className="text-xs bg-destructive/10 rounded px-3 py-2 space-y-1">
-              <div className="flex items-center gap-2 text-destructive font-medium">
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" x2="12" y1="8" y2="12" />
-                  <line x1="12" x2="12.01" y1="16" y2="16" />
-                </svg>
-                <span>{summaryError}</span>
-              </div>
-              {summaryError.includes('wyczerpany') && (
-                <p className="text-destructive/70 text-[11px]">
-                  Limit darmowego tieru: 20 requestów/dzień. Resetuje się codziennie.
-                </p>
-              )}
-            </div>
-          )}
-
-          {summary && (
-            <div
-              ref={contentRef}
-              className="text-sm text-foreground/80 leading-relaxed space-y-0"
-              dangerouslySetInnerHTML={{ __html: parseMarkdown(summary) }}
-            />
-          )}
-        </div>
-      )}
-
-      {summary && model && (
-        <div className="px-4 py-2 bg-accent/5 border-t border-accent/10">
-          <span className="text-[10px] text-muted-foreground/60 font-[family-name:var(--font-mono)]">
-            Wygenerowano przez {model}
-          </span>
-        </div>
-      )}
-    </div>
-  );
-}
-
 function GroupedCard({ job, onFavoritesChange }: { job: GroupedJob; onFavoritesChange?: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
@@ -417,7 +167,7 @@ function GroupedCard({ job, onFavoritesChange }: { job: GroupedJob; onFavoritesC
             title="Podsumowanie AI"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
+              <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275-1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
             </svg>
           </button>
           <button
@@ -458,7 +208,7 @@ function GroupedCard({ job, onFavoritesChange }: { job: GroupedJob; onFavoritesC
 
       {/* AI Summary - shown when clicking sparkle icon */}
       <div className={`transition-all duration-300 ease-in-out ${showSummary ? 'max-h-[2000px] opacity-100 mt-3 pt-3 border-t border-border' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-        <AiSummarySection
+        <AiSummaryCard
           jobTitle={job.title}
           company={job.company}
           description={job.description}
@@ -700,7 +450,7 @@ function GroupedRow({ job, onFavoritesChange }: { job: GroupedJob; onFavoritesCh
         <td className="p-3 pl-10" colSpan={7}>
           <div className={`transition-all duration-300 ease-in-out ${expanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
             <div className="space-y-3 mb-3">
-              <AiSummarySection
+              <AiSummaryCard
                 jobTitle={job.title}
                 company={job.company}
                 description={job.description}
