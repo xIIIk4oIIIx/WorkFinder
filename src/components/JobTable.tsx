@@ -134,7 +134,7 @@ function GroupedCard({ job, onFavoritesChange, showSummary, onToggleSummary, pre
 
   return (
     <div className="border border-border rounded-lg bg-card p-4 transition-all duration-200 hover:shadow-lg hover:shadow-accent/5 hover:border-accent/20 hover:scale-[1.005]">
-      <div className="flex items-start justify-between gap-6">
+      <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <a
             href={primaryUrl}
@@ -181,7 +181,6 @@ function GroupedCard({ job, onFavoritesChange, showSummary, onToggleSummary, pre
               <path d="m9 18 6-6-6-6" />
             </svg>
           </button>
-          <JobCard job={job} preferences={preferences} onPreferenceChange={onPreferenceChange} />
         </div>
       </div>
 
@@ -200,14 +199,17 @@ function GroupedCard({ job, onFavoritesChange, showSummary, onToggleSummary, pre
         </span>
       </div>
 
-      <div className="flex flex-wrap gap-1 mt-2">
-        {sourceDots.map(({ source, count }) => (
-          <span key={source} className="inline-flex items-center gap-1 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2 py-0.5 rounded-md border border-border bg-card text-muted-foreground">
-            <span className={`w-1.5 h-1.5 rounded-full ${SOURCE_MAP[source]?.color ?? 'bg-muted'}`} />
-            {SOURCE_MAP[source]?.label ?? source}
-            {count > 1 && <span className="text-[10px] text-muted-foreground/60">x{count}</span>}
-          </span>
-        ))}
+      <div className="flex items-center justify-between gap-2 mt-2">
+        <div className="flex flex-wrap gap-1">
+          {sourceDots.map(({ source, count }) => (
+            <span key={source} className="inline-flex items-center gap-1 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2 py-0.5 rounded-md border border-border bg-card text-muted-foreground">
+              <span className={`w-1.5 h-1.5 rounded-full ${SOURCE_MAP[source]?.color ?? 'bg-muted'}`} />
+              {SOURCE_MAP[source]?.label ?? source}
+              {count > 1 && <span className="text-[10px] text-muted-foreground/60">x{count}</span>}
+            </span>
+          ))}
+        </div>
+        <JobCard job={job} preferences={preferences} onPreferenceChange={onPreferenceChange} />
       </div>
 
       {/* AI Summary - shown when clicking sparkle icon */}
@@ -273,7 +275,7 @@ function FlatCard({ job, onFavoritesChange, preferences, onPreferenceChange }: {
 
   return (
     <div className="border border-border rounded-lg bg-card p-4 transition-all duration-200 hover:shadow-lg hover:shadow-accent/5 hover:border-accent/20 hover:scale-[1.005]">
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <a
             href={job.sourceUrl}
@@ -285,22 +287,19 @@ function FlatCard({ job, onFavoritesChange, preferences, onPreferenceChange }: {
           </a>
           <div className="text-xs text-muted-foreground mt-0.5 break-words">{job.company}</div>
         </div>
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <button
-            onClick={handleFavoriteToggle}
-            className={`w-8 h-8 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
-              isFavorite
-                ? 'border-rose-300 bg-rose-50 text-rose-500'
-                : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
-            title={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
-          >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-            </svg>
-          </button>
-          <JobCard job={job} preferences={preferences} onPreferenceChange={onPreferenceChange} />
-        </div>
+        <button
+          onClick={handleFavoriteToggle}
+          className={`w-8 h-8 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
+            isFavorite
+              ? 'border-rose-300 bg-rose-50 text-rose-500'
+              : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+          }`}
+          title={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+          </svg>
+        </button>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -316,26 +315,17 @@ function FlatCard({ job, onFavoritesChange, preferences, onPreferenceChange }: {
         </span>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 mt-2">
-        <span className="inline-flex items-center gap-1 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2 py-0.5 rounded-md border border-border bg-card text-muted-foreground">
-          <span className={`w-1.5 h-1.5 rounded-full ${source.color}`} />
-          {source.label}
-        </span>
-        {job.technologies.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {job.technologies.slice(0, 3).map((tech) => (
-              <span key={tech} className="inline-flex items-center text-[11px] font-[family-name:var(--font-mono)] font-medium px-2 py-0.5 rounded-md bg-muted text-foreground">
-                {tech}
-              </span>
-            ))}
-            {job.technologies.length > 3 && (
-              <span className="text-[11px] text-muted-foreground">+{job.technologies.length - 3}</span>
-            )}
-          </div>
-        )}
-        <span className="text-xs text-muted-foreground font-[family-name:var(--font-mono)] ml-auto">
-          {relativeTime(job.publishedAt)}
-        </span>
+      <div className="flex items-center justify-between gap-2 mt-2">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2 py-0.5 rounded-md border border-border bg-card text-muted-foreground">
+            <span className={`w-1.5 h-1.5 rounded-full ${source.color}`} />
+            {source.label}
+          </span>
+          <span className="text-xs text-muted-foreground font-[family-name:var(--font-mono)]">
+            {relativeTime(job.publishedAt)}
+          </span>
+        </div>
+        <JobCard job={job} preferences={preferences} onPreferenceChange={onPreferenceChange} />
       </div>
     </div>
   );
@@ -363,57 +353,9 @@ function GroupedRow({ job, onFavoritesChange, showSummary, onToggleSummary, pref
   return (
     <>
       <tr className="border-b border-border hover:bg-muted/50 transition-colors group">
-        <td className="p-3 min-w-0 max-w-[260px] align-top">
-          <div className="flex items-start gap-2 min-h-[40px]">
-            <div className="flex flex-col items-center justify-between h-full flex-shrink-0 min-h-[40px]">
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={handleFavoriteToggle}
-                  className={`w-5 h-5 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
-                    isFavorite
-                      ? 'border-rose-300 bg-rose-50 text-rose-500'
-                      : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
-                  title={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
-                >
-                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                  </svg>
-                </button>
-                <button
-                  onClick={onToggleSummary}
-                  className={`w-5 h-5 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
-                    showSummary
-                      ? 'border-accent/30 bg-accent/10 text-accent'
-                      : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
-                  title="Podsumowanie AI"
-                >
-                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275-1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => setExpanded(!expanded)}
-                  className="w-5 h-5 flex items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-150 active:scale-90 flex-shrink-0"
-                  aria-label={expanded ? 'Zwiń' : 'Rozwiń'}
-                >
-                  <svg
-                    className={`w-3 h-3 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="m9 18 6-6-6-6" />
-                  </svg>
-                </button>
-              </div>
-              <JobCard job={job} preferences={preferences} onPreferenceChange={onPreferenceChange} />
-            </div>
-            <div className="min-w-0 flex-1">
+        <td className="p-3 min-w-0 max-w-[260px]">
+          <div className="grid grid-rows-[1fr_auto] h-full gap-1">
+            <div className="min-w-0">
               <a
                 href={primaryUrl}
                 target="_blank"
@@ -426,6 +368,51 @@ function GroupedRow({ job, onFavoritesChange, showSummary, onToggleSummary, pref
                 {job.company}
               </div>
             </div>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleFavoriteToggle}
+                className={`w-8 h-8 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
+                  isFavorite
+                    ? 'border-rose-300 bg-rose-50 text-rose-500'
+                    : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+                title={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                </svg>
+              </button>
+              <button
+                onClick={onToggleSummary}
+                className={`w-8 h-8 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
+                  showSummary
+                    ? 'border-accent/30 bg-accent/10 text-accent'
+                    : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+                title="Podsumowanie AI"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275-1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="w-8 h-8 flex items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-150 active:scale-90 flex-shrink-0"
+                aria-label={expanded ? 'Zwiń' : 'Rozwiń'}
+              >
+                <svg
+                  className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
+              </button>
+            </div>
           </div>
         </td>
         <td className="p-3 text-muted-foreground text-sm">{job.city ?? '—'}</td>
@@ -437,18 +424,6 @@ function GroupedRow({ job, onFavoritesChange, showSummary, onToggleSummary, pref
           ) : (
             <span className="text-muted-foreground text-xs">—</span>
           )}
-        </td>
-        <td className="p-3 min-w-0">
-          <div className="flex flex-wrap gap-1">
-            {[...new Set(job.technologies.filter(Boolean))].slice(0, 2).map((tech, i) => (
-              <span key={`${tech}-${i}`} className="inline-flex items-center text-[11px] font-[family-name:var(--font-mono)] font-medium px-2 py-0.5 rounded-md bg-muted text-foreground">
-                {tech}
-              </span>
-            ))}
-            {[...new Set(job.technologies.filter(Boolean))].length > 2 && (
-              <span className="text-[11px] text-muted-foreground">+{[...new Set(job.technologies.filter(Boolean))].length - 2}</span>
-            )}
-          </div>
         </td>
         <td className="p-3 hidden xl:table-cell">
           <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${modeClass}`}>
@@ -467,8 +442,11 @@ function GroupedRow({ job, onFavoritesChange, showSummary, onToggleSummary, pref
             ))}
           </div>
         </td>
-        <td className="p-3 text-xs text-muted-foreground font-[family-name:var(--font-mono)] hidden lg:table-cell">
+        <td className="p-3 text-xs text-muted-foreground font-[family-name:var(--font-mono)]">
           {relativeTime(job.publishedAt)}
+        </td>
+        <td className="p-3">
+          <JobCard job={job} preferences={preferences} onPreferenceChange={onPreferenceChange} />
         </td>
       </tr>
 
@@ -529,25 +507,9 @@ function FlatRow({ job, onFavoritesChange, preferences, onPreferenceChange }: { 
 
   return (
     <tr className="border-b border-border last:border-b-0 hover:bg-muted/50 transition-colors">
-      <td className="p-3 min-w-0 max-w-[260px] align-top">
-        <div className="flex items-start gap-2 min-h-[40px]">
-          <div className="flex flex-col items-center justify-between h-full flex-shrink-0 min-h-[40px]">
-            <button
-              onClick={handleFavoriteToggle}
-              className={`w-5 h-5 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
-                isFavorite
-                  ? 'border-rose-300 bg-rose-50 text-rose-500'
-                  : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
-              }`}
-              title={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
-            >
-              <svg className="w-3 h-3" viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-              </svg>
-            </button>
-            <JobCard job={job} preferences={preferences} onPreferenceChange={onPreferenceChange} />
-          </div>
-          <div className="min-w-0 flex-1">
+      <td className="p-3 min-w-0 max-w-[260px]">
+        <div className="grid grid-rows-[1fr_auto] h-full gap-1">
+          <div className="min-w-0">
             <a
               href={job.sourceUrl}
               target="_blank"
@@ -560,6 +522,21 @@ function FlatRow({ job, onFavoritesChange, preferences, onPreferenceChange }: { 
               {job.company}
             </div>
           </div>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleFavoriteToggle}
+              className={`w-8 h-8 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
+                isFavorite
+                  ? 'border-rose-300 bg-rose-50 text-rose-500'
+                  : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+              title={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+              </svg>
+            </button>
+          </div>
         </div>
       </td>
       <td className="p-3 text-muted-foreground text-sm">{job.city ?? '—'}</td>
@@ -569,18 +546,6 @@ function FlatRow({ job, onFavoritesChange, preferences, onPreferenceChange }: { 
         ) : (
           <span className="text-muted-foreground text-xs">—</span>
         )}
-      </td>
-      <td className="p-3 min-w-0">
-        <div className="flex flex-wrap gap-1">
-          {job.technologies.slice(0, 2).map((tech) => (
-            <span key={tech} className="inline-flex items-center text-[11px] font-[family-name:var(--font-mono)] font-medium px-2 py-0.5 rounded-md bg-muted text-foreground">
-              {tech}
-            </span>
-          ))}
-          {job.technologies.length > 2 && (
-            <span className="text-[11px] text-muted-foreground">+{job.technologies.length - 2}</span>
-          )}
-        </div>
       </td>
       <td className="p-3 hidden xl:table-cell">
         <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${modeClass}`}>
@@ -594,8 +559,11 @@ function FlatRow({ job, onFavoritesChange, preferences, onPreferenceChange }: { 
           {source.label}
         </span>
       </td>
-      <td className="p-3 text-xs text-muted-foreground font-[family-name:var(--font-mono)] hidden lg:table-cell">
+      <td className="p-3 text-xs text-muted-foreground font-[family-name:var(--font-mono)]">
         {relativeTime(job.publishedAt)}
+      </td>
+      <td className="p-3">
+        <JobCard job={job} preferences={preferences} onPreferenceChange={onPreferenceChange} />
       </td>
     </tr>
   );
@@ -696,16 +664,16 @@ export function JobTable({ jobs, total, page, totalPages, onPageChange, onFavori
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="border-b border-border bg-muted">
-                <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap max-w-[260px]">Tytuł / Firma</th>
+                <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap w-[280px]">Tytuł / Firma</th>
                 <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Lokalizacja</th>
                 <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Zarobki</th>
-                <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Technologie</th>
                 <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden xl:table-cell">Tryb</th>
                 <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Źródło</th>
-                <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden xl:table-cell">Data</th>
+                <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Data</th>
+                <th className="p-3 w-[70px]"></th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="[&>tr]:h-[72px]">
               {jobs.map((job) =>
                 isGrouped(job) ? (
                   <GroupedRow key={job.id} job={job} onFavoritesChange={onFavoritesChange} showSummary={expandedSummary[job.id] ?? false} onToggleSummary={() => toggleSummary(job.id)} preferences={preferences} onPreferenceChange={onPreferenceChange} />
