@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useJobs, loadJobsCache, type JobsResponse } from '@/hooks/useJobs';
 import { useStats, loadStatsCache, type Stats } from '@/hooks/useStats';
+import { type PreferenceState, getPreferences, sortJobsByPreference } from '@/lib/preferences';
 
 function getFavorites(): Set<string> {
   if (typeof window === 'undefined') return new Set();
@@ -121,6 +122,7 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(initialFavorites);
+  const [preferences, setPreferences] = useState<PreferenceState>(getPreferences());
   const [syncing, setSyncing] = useState(false);
   const [syncElapsed, setSyncElapsed] = useState(0);
   const syncTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -241,6 +243,8 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
   const handleFavoritesChange = () => {
     setFavorites(getFavorites());
   };
+
+  const sortedJobs = sortJobsByPreference(jobs, preferences);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -364,12 +368,14 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
               </div>
             ) : (
               <JobTable
-                jobs={jobs}
+                jobs={sortedJobs}
                 total={total}
                 page={page}
                 totalPages={totalPages}
                 onPageChange={setPage}
                 onFavoritesChange={handleFavoritesChange}
+                preferences={preferences}
+                onPreferenceChange={setPreferences}
               />
             )}
           </section>
