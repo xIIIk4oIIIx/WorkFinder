@@ -57,7 +57,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const stored = getStoredTheme();
     setThemeState(stored);
-    applyTheme(stored);
     setMounted(true);
 
     const mq = window.matchMedia('(prefers-color-scheme: dark)');

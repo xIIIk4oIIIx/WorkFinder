@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import { startCronJob } from "@/lib/cron";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -35,7 +34,11 @@ export default function RootLayout({
       className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans")}
     >
       <head>
-        <Script src="/theme-init.js" strategy="beforeInteractive" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');var l=t==='light'||(t!=='dark'&&matchMedia('(prefers-color-scheme:light)').matches);if(l)document.documentElement.classList.add('light')}catch(e){}})()`,
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
