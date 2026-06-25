@@ -587,15 +587,14 @@ function FlatRow({ job, onFavoritesChange, preferences, onPreferenceChange }: { 
           {source.label}
         </span>
       </td>
-        <td className="p-3 text-xs text-muted-foreground font-[family-name:var(--font-mono)] hidden lg:table-cell">
-          {relativeTime(job.publishedAt)}
-        </td>
-        <td className="p-3">
-          <JobCard job={job} preferences={preferences} onPreferenceChange={onPreferenceChange} />
-        </td>
-      </tr>
-    );
-  }
+      <td className="p-3 text-xs text-muted-foreground font-[family-name:var(--font-mono)] hidden lg:table-cell">
+        {relativeTime(job.publishedAt)}
+      </td>
+      <td className="p-3">
+        <JobCard job={job} preferences={preferences} onPreferenceChange={onPreferenceChange} />
+      </td>
+    </tr>
+  );
 }
 
 export function JobTable({ jobs, total, page, totalPages, onPageChange, onFavoritesChange, preferences, onPreferenceChange }: JobTableProps) {
