@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { Job, GroupedJob, JobSource } from '@/types/job';
+import { type PreferenceState } from '@/lib/preferences';
 import { AiSummaryCard } from './AiSummaryCard';
+import { JobCard } from './JobCard';
 
 interface JobTableProps {
   jobs: (Job | GroupedJob)[];
@@ -11,6 +13,8 @@ interface JobTableProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   onFavoritesChange?: () => void;
+  preferences: PreferenceState;
+  onPreferenceChange: (state: PreferenceState) => void;
 }
 
 const SOURCE_MAP: Record<string, { label: string; color: string }> = {
@@ -109,7 +113,7 @@ function getSourceDots(sources: JobSource[]): { source: string; count: number }[
   return Array.from(map.entries()).map(([source, count]) => ({ source, count }));
 }
 
-function GroupedCard({ job, onFavoritesChange, showSummary, onToggleSummary }: { job: GroupedJob; onFavoritesChange?: () => void; showSummary: boolean; onToggleSummary: () => void }) {
+function GroupedCard({ job, onFavoritesChange, showSummary, onToggleSummary, preferences, onPreferenceChange }: { job: GroupedJob; onFavoritesChange?: () => void; showSummary: boolean; onToggleSummary: () => void; preferences: PreferenceState; onPreferenceChange: (state: PreferenceState) => void }) {
   const [expanded, setExpanded] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const salary = getBestSalary(job);
@@ -177,6 +181,7 @@ function GroupedCard({ job, onFavoritesChange, showSummary, onToggleSummary }: {
               <path d="m9 18 6-6-6-6" />
             </svg>
           </button>
+          <JobCard job={job} preferences={preferences} onPreferenceChange={onPreferenceChange} />
         </div>
       </div>
 
@@ -249,7 +254,7 @@ function GroupedCard({ job, onFavoritesChange, showSummary, onToggleSummary }: {
   );
 }
 
-function FlatCard({ job, onFavoritesChange }: { job: Job; onFavoritesChange?: () => void }) {
+function FlatCard({ job, onFavoritesChange, preferences, onPreferenceChange }: { job: Job; onFavoritesChange?: () => void; preferences: PreferenceState; onPreferenceChange: (state: PreferenceState) => void }) {
   const [isFavorite, setIsFavorite] = useState(false);
   const source = SOURCE_MAP[job.source] ?? { label: job.source, color: 'bg-muted' };
   const salary = formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency);
@@ -279,19 +284,22 @@ function FlatCard({ job, onFavoritesChange }: { job: Job; onFavoritesChange?: ()
           </a>
           <div className="text-xs text-muted-foreground mt-0.5 break-words">{job.company}</div>
         </div>
-        <button
-          onClick={handleFavoriteToggle}
-          className={`w-8 h-8 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
-            isFavorite
-              ? 'border-rose-300 bg-rose-50 text-rose-500'
-              : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
-          }`}
-          title={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-          </svg>
-        </button>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button
+            onClick={handleFavoriteToggle}
+            className={`w-8 h-8 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
+              isFavorite
+                ? 'border-rose-300 bg-rose-50 text-rose-500'
+                : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+            }`}
+            title={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+            </svg>
+          </button>
+          <JobCard job={job} preferences={preferences} onPreferenceChange={onPreferenceChange} />
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -332,7 +340,7 @@ function FlatCard({ job, onFavoritesChange }: { job: Job; onFavoritesChange?: ()
   );
 }
 
-function GroupedRow({ job, onFavoritesChange, showSummary, onToggleSummary }: { job: GroupedJob; onFavoritesChange?: () => void; showSummary: boolean; onToggleSummary: () => void }) {
+function GroupedRow({ job, onFavoritesChange, showSummary, onToggleSummary, preferences, onPreferenceChange }: { job: GroupedJob; onFavoritesChange?: () => void; showSummary: boolean; onToggleSummary: () => void; preferences: PreferenceState; onPreferenceChange: (state: PreferenceState) => void }) {
   const [expanded, setExpanded] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const salary = getBestSalary(job);
@@ -456,10 +464,13 @@ function GroupedRow({ job, onFavoritesChange, showSummary, onToggleSummary }: { 
         <td className="p-3 text-xs text-muted-foreground font-[family-name:var(--font-mono)] hidden lg:table-cell">
           {relativeTime(job.publishedAt)}
         </td>
+        <td className="p-3">
+          <JobCard job={job} preferences={preferences} onPreferenceChange={onPreferenceChange} />
+        </td>
       </tr>
 
       <tr className={`${expanded || showSummary ? '' : 'hidden'}`}>
-        <td className="p-3 pl-10" colSpan={7}>
+        <td className="p-3 pl-10" colSpan={8}>
           <div className={`transition-all duration-300 ease-in-out ${expanded || showSummary ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
             {showSummary && (
               <div className="space-y-3 mb-3">
@@ -496,7 +507,7 @@ function GroupedRow({ job, onFavoritesChange, showSummary, onToggleSummary }: { 
   );
 }
 
-function FlatRow({ job, onFavoritesChange }: { job: Job; onFavoritesChange?: () => void }) {
+function FlatRow({ job, onFavoritesChange, preferences, onPreferenceChange }: { job: Job; onFavoritesChange?: () => void; preferences: PreferenceState; onPreferenceChange: (state: PreferenceState) => void }) {
   const [isFavorite, setIsFavorite] = useState(false);
   const source = SOURCE_MAP[job.source] ?? { label: job.source, color: 'bg-muted' };
   const salary = formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency);
@@ -576,14 +587,18 @@ function FlatRow({ job, onFavoritesChange }: { job: Job; onFavoritesChange?: () 
           {source.label}
         </span>
       </td>
-      <td className="p-3 text-xs text-muted-foreground font-[family-name:var(--font-mono)] hidden lg:table-cell">
-        {relativeTime(job.publishedAt)}
-      </td>
-    </tr>
-  );
+        <td className="p-3 text-xs text-muted-foreground font-[family-name:var(--font-mono)] hidden lg:table-cell">
+          {relativeTime(job.publishedAt)}
+        </td>
+        <td className="p-3">
+          <JobCard job={job} preferences={preferences} onPreferenceChange={onPreferenceChange} />
+        </td>
+      </tr>
+    );
+  }
 }
 
-export function JobTable({ jobs, total, page, totalPages, onPageChange, onFavoritesChange }: JobTableProps) {
+export function JobTable({ jobs, total, page, totalPages, onPageChange, onFavoritesChange, preferences, onPreferenceChange }: JobTableProps) {
   const [mounted, setMounted] = useState(false);
   const [expandedSummary, setExpandedSummary] = useState<Record<string, boolean>>({});
   useEffect(() => { setMounted(true); }, []);
@@ -635,6 +650,7 @@ export function JobTable({ jobs, total, page, totalPages, onPageChange, onFavori
                   <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden xl:table-cell">Tryb</th>
                   <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Źródło</th>
                   <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden xl:table-cell">Data</th>
+                  <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Ocena</th>
                 </tr>
               </thead>
               <tbody>
@@ -647,6 +663,7 @@ export function JobTable({ jobs, total, page, totalPages, onPageChange, onFavori
                     <td className="p-3 hidden xl:table-cell"><div className="h-5 bg-muted rounded-full animate-pulse w-20" /></td>
                     <td className="p-3"><div className="h-5 bg-muted rounded animate-pulse w-20" /></td>
                     <td className="p-3 hidden xl:table-cell"><div className="h-4 bg-muted rounded animate-pulse w-16" /></td>
+                    <td className="p-3"><div className="h-8 bg-muted rounded animate-pulse w-16" /></td>
                   </tr>
                 ))}
               </tbody>
@@ -664,9 +681,9 @@ export function JobTable({ jobs, total, page, totalPages, onPageChange, onFavori
         <div className="lg:hidden divide-y divide-border">
           {jobs.map((job) =>
             isGrouped(job) ? (
-              <GroupedCard key={job.id} job={job} onFavoritesChange={onFavoritesChange} showSummary={expandedSummary[job.id] ?? false} onToggleSummary={() => toggleSummary(job.id)} />
+              <GroupedCard key={job.id} job={job} onFavoritesChange={onFavoritesChange} showSummary={expandedSummary[job.id] ?? false} onToggleSummary={() => toggleSummary(job.id)} preferences={preferences} onPreferenceChange={onPreferenceChange} />
             ) : (
-              <FlatCard key={job.id} job={job} onFavoritesChange={onFavoritesChange} />
+              <FlatCard key={job.id} job={job} onFavoritesChange={onFavoritesChange} preferences={preferences} onPreferenceChange={onPreferenceChange} />
             )
           )}
         </div>
@@ -683,14 +700,15 @@ export function JobTable({ jobs, total, page, totalPages, onPageChange, onFavori
                 <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden xl:table-cell">Tryb</th>
                 <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Źródło</th>
                 <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden xl:table-cell">Data</th>
+                <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Ocena</th>
               </tr>
             </thead>
             <tbody>
               {jobs.map((job) =>
                 isGrouped(job) ? (
-                  <GroupedRow key={job.id} job={job} onFavoritesChange={onFavoritesChange} showSummary={expandedSummary[job.id] ?? false} onToggleSummary={() => toggleSummary(job.id)} />
+                  <GroupedRow key={job.id} job={job} onFavoritesChange={onFavoritesChange} showSummary={expandedSummary[job.id] ?? false} onToggleSummary={() => toggleSummary(job.id)} preferences={preferences} onPreferenceChange={onPreferenceChange} />
                 ) : (
-                  <FlatRow key={job.id} job={job} onFavoritesChange={onFavoritesChange} />
+                  <FlatRow key={job.id} job={job} onFavoritesChange={onFavoritesChange} preferences={preferences} onPreferenceChange={onPreferenceChange} />
                 )
               )}
             </tbody>
