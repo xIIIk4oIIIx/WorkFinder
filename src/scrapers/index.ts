@@ -78,6 +78,11 @@ export async function runAllScrapers(): Promise<{
           });
           newCount += newJobs.length;
         }
+
+        await db.jobOffer.updateMany({
+          where: { sourceUrl: { in: urls } },
+          data: { fetchedAt: new Date() },
+        });
       }
     } else {
       errors.push(String(result.reason));

@@ -192,7 +192,8 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
     }, 1000);
     
     try {
-      await fetch('/api/sync', { method: 'POST' });
+      const res = await fetch('/api/sync', { method: 'POST' });
+      if (!res.ok) throw new Error(`Sync failed: ${res.status}`);
       await Promise.all([mutateJobs(), mutateStats()]);
     } finally {
       clearInterval(interval);

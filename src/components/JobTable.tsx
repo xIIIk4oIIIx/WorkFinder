@@ -370,6 +370,19 @@ function GroupedRow({ job, onFavoritesChange, showSummary, onToggleSummary }: { 
               </svg>
             </button>
             <button
+              onClick={onToggleSummary}
+              className={`mt-0.5 w-5 h-5 flex items-center justify-center rounded border transition-colors flex-shrink-0 ${
+                showSummary
+                  ? 'border-accent/30 bg-accent/10 text-accent'
+                  : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+              title="Podsumowanie AI"
+            >
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
+              </svg>
+            </button>
+            <button
               onClick={() => setExpanded(!expanded)}
               className="mt-0.5 w-5 h-5 flex items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors flex-shrink-0"
               aria-label={expanded ? 'Zwiń' : 'Rozwiń'}
