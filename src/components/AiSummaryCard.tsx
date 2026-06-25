@@ -10,6 +10,7 @@ interface AiSummaryCardProps {
   description: string | null;
   technologies: string[];
   sourceUrl: string;
+  onClose?: () => void;
 }
 
 interface SummarySection {
@@ -97,7 +98,7 @@ function parseInlineMarkdown(text: string): string {
   return '<p>' + processed.join('\n').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br/>') + '</p>';
 }
 
-export function AiSummaryCard({ jobTitle, company, description, technologies, sourceUrl }: AiSummaryCardProps) {
+export function AiSummaryCard({ jobTitle, company, description, technologies, sourceUrl, onClose }: AiSummaryCardProps) {
   const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -269,7 +270,17 @@ export function AiSummaryCard({ jobTitle, company, description, technologies, so
               <div className="ai-dot" />
               <span>Wygenerowano przez AI • {model}</span>
             </div>
-            {copied && <span className="ai-copied-msg">Skopiowano!</span>}
+            <div className="flex items-center gap-2">
+              {copied && <span className="ai-copied-msg">Skopiowano!</span>}
+              {onClose && (
+                <button
+                  onClick={onClose}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Zamknij podsumowanie
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>

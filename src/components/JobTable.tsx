@@ -218,6 +218,7 @@ function GroupedCard({ job, onFavoritesChange, showSummary, onToggleSummary, pre
           description={job.description}
           technologies={job.technologies}
           sourceUrl={primaryUrl}
+          onClose={onToggleSummary}
         />
       </div>
 
@@ -480,6 +481,7 @@ function GroupedRow({ job, onFavoritesChange, showSummary, onToggleSummary, pref
                   description={job.description}
                   technologies={job.technologies}
                   sourceUrl={primaryUrl}
+                  onClose={onToggleSummary}
                 />
               </div>
             )}

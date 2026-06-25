@@ -216,20 +216,20 @@ export function Filters({ onFilter }: FiltersProps) {
         </div>
 
         <FilterSection title="Lokalizacja" sectionKey="lokalizacja" defaultOpen={false} sections={sections} onToggle={handleSectionToggle}>
-          <div className="space-y-2">
+          <div className="flex gap-2">
             <input
               type="text"
               value={filters.city}
               onChange={(e) => handleChange('city', e.target.value)}
               placeholder="Miasto"
-              className="w-full px-3 py-1.5 border border-border rounded-md bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
+              className="flex-1 min-w-0 px-3 py-1.5 border border-border rounded-md bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
             />
             <input
               type="text"
               value={filters.company}
               onChange={(e) => handleChange('company', e.target.value)}
               placeholder="Firma"
-              className="w-full px-3 py-1.5 border border-border rounded-md bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
+              className="flex-1 min-w-0 px-3 py-1.5 border border-border rounded-md bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
             />
           </div>
         </FilterSection>
