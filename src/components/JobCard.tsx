@@ -25,10 +25,10 @@ export function JobCard({ job, preferences, onPreferenceChange }: JobCardProps) 
   };
 
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className="flex items-center gap-1">
       <button
         onClick={() => handleVote('up')}
-        className={`w-6 h-6 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 ${
+        className={`w-5 h-5 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 ${
           currentVote === 'up'
             ? 'border-emerald-300 bg-emerald-50 text-emerald-500'
             : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -42,7 +42,7 @@ export function JobCard({ job, preferences, onPreferenceChange }: JobCardProps) 
       </button>
       <button
         onClick={() => handleVote('down')}
-        className={`w-6 h-6 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 ${
+        className={`w-5 h-5 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 ${
           currentVote === 'down'
             ? 'border-rose-300 bg-rose-50 text-rose-500'
             : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'

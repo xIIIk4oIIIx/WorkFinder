@@ -365,49 +365,54 @@ function GroupedRow({ job, onFavoritesChange, showSummary, onToggleSummary, pref
       <tr className="border-b border-border hover:bg-muted/50 transition-colors group">
         <td className="p-3 min-w-0 max-w-[260px]">
           <div className="flex items-start gap-2">
-            <button
-              onClick={handleFavoriteToggle}
-              className={`mt-0.5 w-5 h-5 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
-                isFavorite
-                  ? 'border-rose-300 bg-rose-50 text-rose-500'
-                  : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
-              }`}
-              title={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
-            >
-              <svg className="w-3 h-3" viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-              </svg>
-            </button>
-            <button
-              onClick={onToggleSummary}
-              className={`mt-0.5 w-5 h-5 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
-                showSummary
-                  ? 'border-accent/30 bg-accent/10 text-accent'
-                  : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
-              }`}
-              title="Podsumowanie AI"
-            >
-              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275-1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
-              </svg>
-            </button>
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="mt-0.5 w-5 h-5 flex items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-150 active:scale-90 flex-shrink-0"
-              aria-label={expanded ? 'Zwiń' : 'Rozwiń'}
-            >
-              <svg
-                className={`w-3 h-3 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="m9 18 6-6-6-6" />
-              </svg>
-            </button>
+            <div className="flex flex-col items-center gap-1 flex-shrink-0">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handleFavoriteToggle}
+                  className={`w-5 h-5 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
+                    isFavorite
+                      ? 'border-rose-300 bg-rose-50 text-rose-500'
+                      : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                  title={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
+                >
+                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={onToggleSummary}
+                  className={`w-5 h-5 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
+                    showSummary
+                      ? 'border-accent/30 bg-accent/10 text-accent'
+                      : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                  title="Podsumowanie AI"
+                >
+                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275-1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setExpanded(!expanded)}
+                  className="w-5 h-5 flex items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-150 active:scale-90 flex-shrink-0"
+                  aria-label={expanded ? 'Zwiń' : 'Rozwiń'}
+                >
+                  <svg
+                    className={`w-3 h-3 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m9 18 6-6-6-6" />
+                  </svg>
+                </button>
+              </div>
+              <JobCard job={job} preferences={preferences} onPreferenceChange={onPreferenceChange} />
+            </div>
             <div className="min-w-0 flex-1">
               <a
                 href={primaryUrl}
@@ -464,9 +469,6 @@ function GroupedRow({ job, onFavoritesChange, showSummary, onToggleSummary, pref
         </td>
         <td className="p-3 text-xs text-muted-foreground font-[family-name:var(--font-mono)] hidden lg:table-cell">
           {relativeTime(job.publishedAt)}
-        </td>
-        <td className="p-3">
-          <JobCard job={job} preferences={preferences} onPreferenceChange={onPreferenceChange} />
         </td>
       </tr>
 
@@ -529,19 +531,22 @@ function FlatRow({ job, onFavoritesChange, preferences, onPreferenceChange }: { 
     <tr className="border-b border-border last:border-b-0 hover:bg-muted/50 transition-colors">
       <td className="p-3 min-w-0 max-w-[260px]">
         <div className="flex items-start gap-2">
-          <button
-            onClick={handleFavoriteToggle}
-            className={`mt-0.5 w-5 h-5 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
-              isFavorite
-                ? 'border-rose-300 bg-rose-50 text-rose-500'
-                : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
-            title={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
-          >
-            <svg className="w-3 h-3" viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-            </svg>
-          </button>
+          <div className="flex flex-col items-center gap-1 flex-shrink-0">
+            <button
+              onClick={handleFavoriteToggle}
+              className={`w-5 h-5 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
+                isFavorite
+                  ? 'border-rose-300 bg-rose-50 text-rose-500'
+                  : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+              title={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
+            >
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+              </svg>
+            </button>
+            <JobCard job={job} preferences={preferences} onPreferenceChange={onPreferenceChange} />
+          </div>
           <div className="min-w-0 flex-1">
             <a
               href={job.sourceUrl}
@@ -591,9 +596,6 @@ function FlatRow({ job, onFavoritesChange, preferences, onPreferenceChange }: { 
       </td>
       <td className="p-3 text-xs text-muted-foreground font-[family-name:var(--font-mono)] hidden lg:table-cell">
         {relativeTime(job.publishedAt)}
-      </td>
-      <td className="p-3">
-        <JobCard job={job} preferences={preferences} onPreferenceChange={onPreferenceChange} />
       </td>
     </tr>
   );
@@ -701,7 +703,6 @@ export function JobTable({ jobs, total, page, totalPages, onPageChange, onFavori
                 <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden xl:table-cell">Tryb</th>
                 <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Źródło</th>
                 <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden xl:table-cell">Data</th>
-                <th className="p-3 text-left text-[11px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap">Ocena</th>
               </tr>
             </thead>
             <tbody>
