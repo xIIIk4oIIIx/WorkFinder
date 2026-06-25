@@ -134,7 +134,7 @@ function GroupedCard({ job, onFavoritesChange, showSummary, onToggleSummary, pre
 
   return (
     <div className="border border-border rounded-lg bg-card p-4 transition-all duration-200 hover:shadow-lg hover:shadow-accent/5 hover:border-accent/20 hover:scale-[1.005]">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-6">
         <div className="min-w-0 flex-1">
           <a
             href={primaryUrl}
@@ -363,9 +363,9 @@ function GroupedRow({ job, onFavoritesChange, showSummary, onToggleSummary, pref
   return (
     <>
       <tr className="border-b border-border hover:bg-muted/50 transition-colors group">
-        <td className="p-3 min-w-0 max-w-[260px]">
-          <div className="flex items-start gap-2">
-            <div className="flex flex-col items-center gap-3 flex-shrink-0">
+        <td className="p-3 min-w-0 max-w-[260px] align-top">
+          <div className="flex items-start gap-2 min-h-[40px]">
+            <div className="flex flex-col items-center justify-between h-full flex-shrink-0 min-h-[40px]">
               <div className="flex items-center gap-1">
                 <button
                   onClick={handleFavoriteToggle}
@@ -490,7 +490,7 @@ function GroupedRow({ job, onFavoritesChange, showSummary, onToggleSummary, pref
             {expanded && job.sources.map((src) => {
               const srcInfo = SOURCE_MAP[src.source] ?? { label: src.source, color: 'bg-muted' };
               return (
-                <div key={src.id} className="flex items-center gap-3 flex-wrap py-2 border-t border-border first:border-t-0">
+                <div key={src.id} className="flex items-center gap-6 flex-wrap py-2 border-t border-border first:border-t-0">
                   <span className={`w-2 h-2 rounded-full flex-shrink-0 ${srcInfo.color}`} />
                   <span className="text-[11px] font-[family-name:var(--font-mono)] font-medium text-muted-foreground">{srcInfo.label}</span>
                   <a
@@ -529,9 +529,9 @@ function FlatRow({ job, onFavoritesChange, preferences, onPreferenceChange }: { 
 
   return (
     <tr className="border-b border-border last:border-b-0 hover:bg-muted/50 transition-colors">
-      <td className="p-3 min-w-0 max-w-[260px]">
-        <div className="flex items-start gap-2">
-          <div className="flex flex-col items-center gap-3 flex-shrink-0">
+      <td className="p-3 min-w-0 max-w-[260px] align-top">
+        <div className="flex items-start gap-2 min-h-[40px]">
+          <div className="flex flex-col items-center justify-between h-full flex-shrink-0 min-h-[40px]">
             <button
               onClick={handleFavoriteToggle}
               className={`w-5 h-5 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
