@@ -80,9 +80,9 @@ export interface FilterState {
 const AVAILABLE_SOURCES = [
   { id: 'nofluffjobs', label: 'NoFluffJobs', color: 'bg-accent' },
   { id: 'bulldogjob', label: 'BulldogJob', color: 'bg-blue-500' },
-  { id: 'olx', label: 'OLX', color: 'bg-orange-500' },
-  { id: 'justjoin', label: 'JustJoin', color: 'bg-violet-500' },
-  { id: 'rocketjobs', label: 'RocketJobs', color: 'bg-cyan-500' },
+  { id: 'olx', label: 'OLX', color: 'bg-amber-500' },
+  { id: 'justjoin', label: 'JustJoin', color: 'bg-blue-500' },
+  { id: 'rocketjobs', label: 'RocketJobs', color: 'bg-accent' },
   { id: 'jooble', label: 'Jooble', color: 'bg-emerald-500' },
   { id: 'pracuj', label: 'Pracuj.pl', color: 'bg-rose-500' },
 ];
@@ -107,7 +107,6 @@ const DEFAULT_FILTERS: FilterState = {
 
 const DEFAULT_SECTIONS: Record<string, boolean> = {
   lokalizacja: false,
-  technologia: false,
   zarobki: false,
   zrodla: false,
 };
@@ -189,7 +188,7 @@ export function Filters({ onFilter }: FiltersProps) {
         <h3 className="text-sm font-semibold tracking-tight">Filtry</h3>
         <button
           onClick={handleClear}
-          className="text-[11px] font-[family-name:var(--font-mono)] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+          className="text-[11px] font-[family-name:var(--font-mono)] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-all duration-150 active:scale-95"
         >
           Wyczyść wszystkie
         </button>
@@ -203,10 +202,10 @@ export function Filters({ onFilter }: FiltersProps) {
               <button
                 key={mode.id}
                 onClick={() => handleWorkModeToggle(mode.id)}
-                className={`inline-flex items-center gap-1.5 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2.5 py-1 rounded-md border transition-colors ${
+                className={`inline-flex items-center gap-1.5 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2.5 py-1 rounded-md border transition-all duration-150 active:scale-95 ${
                   filters.workMode.includes(mode.id)
                     ? 'border-accent/30 bg-accent/10 text-accent'
-                    : 'border-border bg-card text-muted-foreground'
+                    : 'border-border bg-card text-muted-foreground hover:bg-muted'
                 }`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${mode.id === 'remote' ? 'bg-emerald-500' : mode.id === 'office' ? 'bg-slate-400' : 'bg-amber-500'}`} />
@@ -233,16 +232,6 @@ export function Filters({ onFilter }: FiltersProps) {
               className="w-full px-3 py-1.5 border border-border rounded-md bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
             />
           </div>
-        </FilterSection>
-
-        <FilterSection title="Technologia" sectionKey="technologia" defaultOpen={false} sections={sections} onToggle={handleSectionToggle}>
-          <input
-            type="text"
-            value={filters.technology}
-            onChange={(e) => handleChange('technology', e.target.value)}
-            placeholder="np. React, Node.js"
-            className="w-full px-3 py-1.5 border border-border rounded-md bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
-          />
         </FilterSection>
 
         <FilterSection title="Zarobki" sectionKey="zarobki" defaultOpen={false} sections={sections} onToggle={handleSectionToggle}>
@@ -275,14 +264,14 @@ export function Filters({ onFilter }: FiltersProps) {
                 <button
                   key={source.id}
                   onClick={() => handleSourceToggle(source.id)}
-                  className={`inline-flex items-center gap-1.5 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2.5 py-1 rounded-md border transition-colors ${
+                  className={`inline-flex items-center gap-1.5 text-[11px] font-[family-name:var(--font-mono)] font-medium px-2.5 py-1 rounded-md border transition-all duration-150 active:scale-95 ${
                     isIncluded
                       ? 'border-accent/30 bg-accent/10 text-accent'
                       : isExcluded
                         ? 'border-destructive/30 bg-destructive/10 text-destructive'
-                        : 'border-border bg-card text-muted-foreground'
+                        : 'border-border bg-card text-muted-foreground hover:bg-muted'
                   }`}
-              >
+                >
                 <span className={`w-1.5 h-1.5 rounded-full ${source.color}`} />
                 {source.label}
               </button>
@@ -294,7 +283,7 @@ export function Filters({ onFilter }: FiltersProps) {
 
       <button
         onClick={handleApply}
-        className="w-full mt-4 px-4 py-2 bg-accent text-accent-foreground rounded-md text-sm font-medium hover:bg-accent/90 transition-colors"
+        className="w-full mt-4 px-4 py-2 bg-accent text-accent-foreground rounded-md text-sm font-medium hover:bg-accent/90 active:scale-[0.98] transition-all duration-150 shadow-md shadow-accent/20"
       >
         Filtruj
       </button>

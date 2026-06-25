@@ -15,10 +15,10 @@ interface JobTableProps {
 
 const SOURCE_MAP: Record<string, { label: string; color: string }> = {
   nofluffjobs: { label: 'NoFluffJobs', color: 'bg-accent' },
-  justjoin: { label: 'JustJoin', color: 'bg-violet-500' },
+  justjoin: { label: 'JustJoin', color: 'bg-blue-500' },
   bulldogjob: { label: 'BulldogJob', color: 'bg-blue-500' },
-  olx: { label: 'OLX', color: 'bg-orange-500' },
-  rocketjobs: { label: 'RocketJobs', color: 'bg-cyan-500' },
+  olx: { label: 'OLX', color: 'bg-amber-500' },
+  rocketjobs: { label: 'RocketJobs', color: 'bg-accent' },
   jooble: { label: 'Jooble', color: 'bg-emerald-500' },
   pracuj: { label: 'Pracuj.pl', color: 'bg-rose-500' },
 };
@@ -129,7 +129,7 @@ function GroupedCard({ job, onFavoritesChange, showSummary, onToggleSummary }: {
   };
 
   return (
-    <div className="border border-border rounded-lg bg-card p-4 transition-all duration-200 hover:shadow-sm">
+    <div className="border border-border rounded-lg bg-card p-4 transition-all duration-200 hover:shadow-lg hover:shadow-accent/5 hover:border-accent/20 hover:scale-[1.005]">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <a
@@ -145,7 +145,7 @@ function GroupedCard({ job, onFavoritesChange, showSummary, onToggleSummary }: {
         <div className="flex items-center gap-1 flex-shrink-0">
           <button
             onClick={handleFavoriteToggle}
-            className={`w-8 h-8 flex items-center justify-center rounded border transition-colors ${
+            className={`w-8 h-8 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 ${
               isFavorite
                 ? 'border-rose-300 bg-rose-50 text-rose-500'
                 : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -158,7 +158,7 @@ function GroupedCard({ job, onFavoritesChange, showSummary, onToggleSummary }: {
           </button>
           <button
             onClick={onToggleSummary}
-            className={`w-8 h-8 flex items-center justify-center rounded border transition-colors ${
+            className={`w-8 h-8 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 ${
               showSummary
                 ? 'border-accent/30 bg-accent/10 text-accent'
                 : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -171,7 +171,7 @@ function GroupedCard({ job, onFavoritesChange, showSummary, onToggleSummary }: {
           </button>
           <button
             onClick={() => setExpanded(!expanded)}
-            className="w-8 h-8 flex items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-150 active:scale-90"
           >
             <svg className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="m9 18 6-6-6-6" />
@@ -266,7 +266,7 @@ function FlatCard({ job, onFavoritesChange }: { job: Job; onFavoritesChange?: ()
   };
 
   return (
-    <div className="border border-border rounded-lg bg-card p-4">
+    <div className="border border-border rounded-lg bg-card p-4 transition-all duration-200 hover:shadow-lg hover:shadow-accent/5 hover:border-accent/20 hover:scale-[1.005]">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <a
@@ -281,7 +281,7 @@ function FlatCard({ job, onFavoritesChange }: { job: Job; onFavoritesChange?: ()
         </div>
         <button
           onClick={handleFavoriteToggle}
-          className={`w-8 h-8 flex items-center justify-center rounded border transition-colors flex-shrink-0 ${
+          className={`w-8 h-8 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
             isFavorite
               ? 'border-rose-300 bg-rose-50 text-rose-500'
               : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -358,7 +358,7 @@ function GroupedRow({ job, onFavoritesChange, showSummary, onToggleSummary }: { 
           <div className="flex items-start gap-2">
             <button
               onClick={handleFavoriteToggle}
-              className={`mt-0.5 w-5 h-5 flex items-center justify-center rounded border transition-colors flex-shrink-0 ${
+              className={`mt-0.5 w-5 h-5 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
                 isFavorite
                   ? 'border-rose-300 bg-rose-50 text-rose-500'
                   : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -371,7 +371,7 @@ function GroupedRow({ job, onFavoritesChange, showSummary, onToggleSummary }: { 
             </button>
             <button
               onClick={onToggleSummary}
-              className={`mt-0.5 w-5 h-5 flex items-center justify-center rounded border transition-colors flex-shrink-0 ${
+              className={`mt-0.5 w-5 h-5 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
                 showSummary
                   ? 'border-accent/30 bg-accent/10 text-accent'
                   : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -379,12 +379,12 @@ function GroupedRow({ job, onFavoritesChange, showSummary, onToggleSummary }: { 
               title="Podsumowanie AI"
             >
               <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
+                <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275-1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
               </svg>
             </button>
             <button
               onClick={() => setExpanded(!expanded)}
-              className="mt-0.5 w-5 h-5 flex items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors flex-shrink-0"
+              className="mt-0.5 w-5 h-5 flex items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-150 active:scale-90 flex-shrink-0"
               aria-label={expanded ? 'Zwiń' : 'Rozwiń'}
             >
               <svg
@@ -518,7 +518,7 @@ function FlatRow({ job, onFavoritesChange }: { job: Job; onFavoritesChange?: () 
         <div className="flex items-start gap-2">
           <button
             onClick={handleFavoriteToggle}
-            className={`mt-0.5 w-5 h-5 flex items-center justify-center rounded border transition-colors flex-shrink-0 ${
+            className={`mt-0.5 w-5 h-5 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
               isFavorite
                 ? 'border-rose-300 bg-rose-50 text-rose-500'
                 : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -703,7 +703,7 @@ export function JobTable({ jobs, total, page, totalPages, onPageChange, onFavori
           <button
             onClick={() => onPageChange(page - 1)}
             disabled={page === 1}
-            className="px-2.5 py-1.5 border border-border rounded-md bg-card text-foreground text-xs font-medium hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="px-2.5 py-1.5 border border-border rounded-md bg-card text-foreground text-xs font-medium hover:bg-muted hover:border-accent/30 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
           >
             ←
           </button>
@@ -714,10 +714,10 @@ export function JobTable({ jobs, total, page, totalPages, onPageChange, onFavori
               <button
                 key={p}
                 onClick={() => onPageChange(p)}
-                className={`min-w-[32px] px-2 py-1.5 border rounded-md text-xs font-medium transition-colors ${
+                className={`min-w-[32px] px-2 py-1.5 border rounded-md text-xs font-medium transition-all duration-150 active:scale-95 ${
                   p === page
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'border-border bg-card text-foreground hover:bg-muted'
+                    ? 'bg-accent text-accent-foreground border-accent shadow-md shadow-accent/20'
+                    : 'border-border bg-card text-foreground hover:bg-muted hover:border-accent/30'
                 }`}
               >
                 {p}
@@ -727,7 +727,7 @@ export function JobTable({ jobs, total, page, totalPages, onPageChange, onFavori
           <button
             onClick={() => onPageChange(page + 1)}
             disabled={page === totalPages}
-            className="px-2.5 py-1.5 border border-border rounded-md bg-card text-foreground text-xs font-medium hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="px-2.5 py-1.5 border border-border rounded-md bg-card text-foreground text-xs font-medium hover:bg-muted hover:border-accent/30 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
           >
             →
           </button>

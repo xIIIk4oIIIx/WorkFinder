@@ -20,16 +20,53 @@ function getFavorites(): Set<string> {
   }
 }
 
-function LoadingSpinner() {
+function LoadingSkeleton() {
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white dark:bg-background">
-      <div className="flex flex-col items-center gap-4">
-        <svg className="w-10 h-10 animate-spin text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-          <polyline points="21 3 21 9 15 9" />
-        </svg>
-        <p className="text-sm text-muted-foreground font-medium">Ładowanie...</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <header className="bg-card/80 backdrop-blur-md border-b border-border">
+        <div className="max-w-[1200px] mx-auto px-4 lg:px-8 py-3 lg:py-4">
+          <div className="flex items-center justify-between">
+            <div className="h-6 w-32 bg-muted rounded animate-pulse" />
+            <div className="flex items-center gap-3">
+              <div className="h-5 w-20 bg-muted rounded animate-pulse" />
+              <div className="h-5 w-16 bg-muted rounded animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </header>
+      <main className="max-w-[1200px] mx-auto px-4 lg:px-8 py-6 lg:py-8">
+        <div className="flex gap-8">
+          <aside className="w-64 hidden lg:block">
+            <div className="space-y-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-20 bg-muted rounded-lg animate-pulse" />
+              ))}
+            </div>
+          </aside>
+          <section className="flex-1">
+            <div className="flex gap-3 mb-6">
+              <div className="h-10 w-24 bg-muted rounded-lg animate-pulse" />
+              <div className="h-10 w-28 bg-muted rounded-lg animate-pulse" />
+              <div className="flex-1 h-10 bg-muted rounded-lg animate-pulse" />
+            </div>
+            <div className="border border-border rounded-lg bg-card">
+              <div className="divide-y divide-border">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="p-4">
+                    <div className="h-4 bg-muted rounded animate-pulse w-3/4" />
+                    <div className="h-3 bg-muted rounded animate-pulse w-1/2 mt-2" />
+                    <div className="flex gap-2 mt-3">
+                      <div className="h-5 bg-muted rounded animate-pulse w-24" />
+                      <div className="h-5 bg-muted rounded-full animate-pulse w-20" />
+                      <div className="h-5 bg-muted rounded-md animate-pulse w-16" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
     </div>
   );
 }
@@ -56,7 +93,7 @@ useEffect(() => {
     setReady(true);
   }, []);
 
-  if (!ready) return <LoadingSpinner />;
+  if (!ready) return <LoadingSkeleton />;
 
   return <HomeContent initialStats={initialCache.stats} initialFavorites={initialCache.favorites} />;
 }
@@ -171,7 +208,7 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
     };
   }, []);
 
-  if (total === 0 && isLoading) return <LoadingSpinner />;
+  if (total === 0 && isLoading) return <LoadingSkeleton />;
 
   const handleSearch = (query: string) => {
     setSearch(query);
@@ -208,9 +245,9 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="relative bg-card border-b border-border">
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-3 lg:py-4">
+        <div className="max-w-[1200px] mx-auto px-4 lg:px-8 py-3 lg:py-4">
           <div className="flex items-center justify-between gap-4">
-            <h1 className="text-xl lg:text-2xl font-bold tracking-tight font-[family-name:var(--font-geist-sans)] whitespace-nowrap">WorkFinder</h1>
+            <h1 className="text-xl lg:text-2xl font-bold tracking-tight font-[family-name:var(--font-sans)] whitespace-nowrap">WorkFinder</h1>
 
             <div className="flex md:hidden items-center gap-3 text-xs">
               <div className="flex items-center gap-1">
@@ -224,28 +261,27 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
               </div>
             </div>
 
-            <div className="hidden md:grid grid-cols-4 gap-3">
-              <div className="border border-border rounded-lg px-4 py-3 bg-background">
-                <div suppressHydrationWarning className="text-2xl font-bold tracking-tight font-[family-name:var(--font-geist-sans)]"><AnimatedNumber value={total} /></div>
-                <div className="text-xs text-muted-foreground font-medium">Łącznie ofert</div>
+            <div className="hidden md:flex items-center gap-3">
+              <div className="border border-border rounded-lg px-4 py-2.5 bg-background/50 backdrop-blur-sm">
+                <div suppressHydrationWarning className="text-xl font-semibold tracking-tight font-[family-name:var(--font-sans)]"><AnimatedNumber value={total} /></div>
+                <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Łącznie</div>
               </div>
-              <div className="border border-border rounded-lg px-4 py-3 bg-background">
-                <div suppressHydrationWarning className="text-2xl font-bold tracking-tight font-[family-name:var(--font-geist-sans)] text-accent">+<AnimatedNumber value={stats?.todayNew ?? 0} /></div>
-                <div className="text-xs text-muted-foreground font-medium">Nowe dziś</div>
+              <div className="border border-accent/20 rounded-lg px-4 py-2.5 bg-accent/5">
+                <div suppressHydrationWarning className="text-xl font-semibold tracking-tight font-[family-name:var(--font-sans)] text-accent">+<AnimatedNumber value={stats?.todayNew ?? 0} /></div>
+                <div className="text-[10px] text-accent/70 font-medium uppercase tracking-wider">Dziś</div>
               </div>
-              <div className="border border-border rounded-lg px-4 py-3 bg-background">
-                <div suppressHydrationWarning className="text-2xl font-bold tracking-tight font-[family-name:var(--font-geist-sans)]"><AnimatedNumber value={stats?.bySource?.length ?? 0} /></div>
-                <div className="text-xs text-muted-foreground font-medium">Aktywne źródła</div>
+              <div className="h-8 w-px bg-border" />
+              <div className="text-xs text-muted-foreground">
+                <span className="font-medium">{stats?.bySource?.length ?? 0}</span> źródeł
               </div>
-              <div className="border border-border rounded-lg px-4 py-3 bg-background">
-                <div suppressHydrationWarning className="text-2xl font-bold tracking-tight font-[family-name:var(--font-geist-sans)]">{stats?.lastSync ? new Date(stats.lastSync).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : '—'}</div>
-                <div className="text-xs text-muted-foreground font-medium">Ostatni sync</div>
+              <div className="text-xs text-muted-foreground">
+                Sync: <span className="font-[family-name:var(--font-mono)] font-medium">{stats?.lastSync ? new Date(stats.lastSync).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm">
+              <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm" className="active:scale-95 transition-all duration-150">
                 <svg className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                   <polyline points="21 3 21 9 15 9" />
@@ -261,17 +297,17 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
         )}
       </header>
 
-      <main className="max-w-[1400px] mx-auto p-4 lg:p-6">
-        <div className="flex gap-6">
-          <aside className="w-60 flex-shrink-0 hidden lg:block sticky top-4 self-start">
+      <main id="main-content" className="max-w-[1200px] mx-auto px-4 lg:px-8 py-6 lg:py-8">
+        <div className="flex gap-8">
+          <aside className="w-64 flex-shrink-0 hidden lg:block sticky top-6 self-start">
             <Filters onFilter={handleFilter} />
           </aside>
 
           <section className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-6">
               <button
                 onClick={openDrawer}
-                className="lg:hidden flex items-center gap-2 px-3 py-2 border border-border rounded-md bg-card text-foreground text-sm font-medium hover:bg-muted transition-colors"
+                className="lg:hidden flex items-center gap-2 px-3 py-2 border border-border rounded-md bg-card text-foreground text-sm font-medium hover:bg-muted active:scale-95 transition-all duration-150"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="4" x2="4" y1="21" y2="14" /><line x1="4" x2="4" y1="10" y2="3" />
@@ -282,10 +318,10 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
               </button>
               <button
                 onClick={() => { setShowFavoritesOnly(!showFavoritesOnly); setPage(1); }}
-                className={`flex items-center gap-2 px-3 py-2 border rounded-md text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 px-3 py-2 border rounded-md text-sm font-medium transition-all duration-150 active:scale-95 ${
                   showFavoritesOnly
                     ? 'border-rose-300 bg-rose-50 text-rose-600'
-                    : 'border-border bg-card text-muted-foreground hover:bg-muted hover:bg-muted hover:text-foreground'
+                    : 'border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill={showFavoritesOnly ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -309,15 +345,21 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
               </div>
             )}
             {jobs.length === 0 && !isLoading ? (
-              <div className="text-center py-16 text-muted-foreground">
-                <div className="text-4xl mb-3">🔍</div>
-                <p className="font-medium text-foreground">
+              <div className="text-center py-20 px-8">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                  <svg className="w-8 h-8 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                    {showFavoritesOnly && <path d="M8 11h6" />}
+                  </svg>
+                </div>
+                <p className="font-medium text-foreground text-lg">
                   {showFavoritesOnly ? 'Brak ulubionych ofert' : 'Nie znaleziono ofert'}
                 </p>
-                <p className="text-sm mt-1">
+                <p className="text-sm text-muted-foreground mt-2 max-w-sm mx-auto">
                   {showFavoritesOnly
-                    ? 'Kliknij serduszko na ofercie aby dodać ją do ulubionych'
-                    : 'Spróbuj zmienić kryteria wyszukiwania'}
+                    ? 'Kliknij ikonę serca na ofercie, aby dodać ją do ulubionych'
+                    : 'Spróbuj zmienić kryteria wyszukiwania lub rozszerzyć zakres filtrów'}
                 </p>
               </div>
             ) : (
