@@ -645,8 +645,49 @@ export function JobTable({ jobs, total, page, totalPages, onPageChange, onFavori
     );
   }
 
+  const paginationBar = totalPages > 1 && (
+    <div className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl">
+      <button
+        onClick={() => onPageChange(page - 1)}
+        disabled={page === 1}
+        className="w-9 h-9 flex items-center justify-center border border-border rounded-lg bg-card text-foreground hover:bg-accent/10 hover:border-accent/40 hover:text-accent active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:ring-offset-1"
+      >
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+      {getPageNumbers().map((p, i) =>
+        p === '...' ? (
+          <span key={`dots-${i}`} className="px-1 text-muted-foreground text-xs">…</span>
+        ) : (
+          <button
+            key={p}
+            onClick={() => onPageChange(p)}
+            className={`min-w-[36px] h-9 px-2 border rounded-lg text-xs font-semibold transition-all duration-150 active:scale-95 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:ring-offset-1 ${
+              p === page
+                ? 'bg-accent text-accent-foreground border-accent font-bold'
+                : 'border-border bg-card text-foreground hover:bg-accent/10 hover:border-accent/40 hover:text-accent'
+            }`}
+          >
+            {p}
+          </button>
+        )
+      )}
+      <button
+        onClick={() => onPageChange(page + 1)}
+        disabled={page === totalPages}
+        className="w-9 h-9 flex items-center justify-center border border-border rounded-lg bg-card text-foreground hover:bg-accent/10 hover:border-accent/40 hover:text-accent active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:ring-offset-1"
+      >
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      </button>
+    </div>
+  );
+
   return (
     <div>
+      <div className="mb-4 text-center">{paginationBar}</div>
       <div className="border border-border rounded-lg bg-card">
         {/* Mobile card view */}
         <div className="lg:hidden divide-y divide-border">
@@ -686,41 +727,7 @@ export function JobTable({ jobs, total, page, totalPages, onPageChange, onFavori
         </div>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-1 mt-4">
-          <button
-            onClick={() => onPageChange(page - 1)}
-            disabled={page === 1}
-            className="px-2.5 py-1.5 border border-border rounded-md bg-card text-foreground text-xs font-medium hover:bg-muted hover:border-accent/30 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
-          >
-            ←
-          </button>
-          {getPageNumbers().map((p, i) =>
-            p === '...' ? (
-              <span key={`dots-${i}`} className="px-1 text-muted-foreground text-xs">…</span>
-            ) : (
-              <button
-                key={p}
-                onClick={() => onPageChange(p)}
-                className={`min-w-[32px] px-2 py-1.5 border rounded-md text-xs font-medium transition-all duration-150 active:scale-95 ${
-                  p === page
-                    ? 'bg-accent text-accent-foreground border-accent shadow-md shadow-accent/20'
-                    : 'border-border bg-card text-foreground hover:bg-muted hover:border-accent/30'
-                }`}
-              >
-                {p}
-              </button>
-            )
-          )}
-          <button
-            onClick={() => onPageChange(page + 1)}
-            disabled={page === totalPages}
-            className="px-2.5 py-1.5 border border-border rounded-md bg-card text-foreground text-xs font-medium hover:bg-muted hover:border-accent/30 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
-          >
-            →
-          </button>
-        </div>
-      )}
+      <div className="mt-4 mb-4 text-center">{paginationBar}</div>
     </div>
   );
 }

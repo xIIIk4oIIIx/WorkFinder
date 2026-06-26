@@ -130,6 +130,18 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const isDrawerOpen = useRef(false);
+  const tableSectionRef = useRef<HTMLElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+
+  const handlePageChange = useCallback((newPage: number) => {
+    setPage(newPage);
+    const header = headerRef.current;
+    const section = tableSectionRef.current;
+    if (header && section) {
+      const headerTop = header.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: headerTop, behavior: 'smooth' });
+    }
+  }, []);
 
   const openDrawer = useCallback(() => {
     if (isDrawerOpen.current) return;
@@ -248,7 +260,7 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="relative bg-card border-b border-border">
+      <header ref={headerRef} className="relative bg-card border-b border-border">
         <div className="max-w-[1200px] mx-auto px-4 lg:px-8 py-3 lg:py-4">
           <div className="flex items-center justify-between gap-4">
             <h1 className="text-xl lg:text-2xl font-bold tracking-tight font-[family-name:var(--font-sans)] whitespace-nowrap">WorkFinder</h1>
@@ -279,7 +291,7 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
                 <span className="font-medium">{stats?.bySource?.length ?? 0}</span> źródeł
               </div>
               <div className="text-xs text-muted-foreground">
-                Sync: <span className="font-[family-name:var(--font-mono)] font-medium">{stats?.lastSync ? new Date(stats.lastSync).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+                Ostatnie odświeżenie: <span className="font-[family-name:var(--font-mono)] font-medium">{stats?.lastSync ? new Date(stats.lastSync).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
               </div>
             </div>
 
@@ -307,8 +319,8 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
             <Filters onFilter={handleFilter} />
           </aside>
 
-          <section className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-6">
+          <section ref={tableSectionRef} className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 mb-4">
               <button
                 onClick={openDrawer}
                 className="lg:hidden flex items-center gap-2 px-3 py-2 border border-border rounded-md bg-card text-foreground text-sm font-medium hover:bg-muted active:scale-95 transition-all duration-150"
@@ -321,7 +333,7 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
                 Filtry
               </button>
               <button
-                onClick={() => { setShowFavoritesOnly(!showFavoritesOnly); setPage(1); }}
+                onClick={() => { setShowFavoritesOnly(!showFavoritesOnly); handlePageChange(1); }}
                 className={`flex items-center gap-2 px-3 py-2 border rounded-md text-sm font-medium transition-all duration-150 active:scale-95 ${
                   showFavoritesOnly
                     ? 'border-rose-300 bg-rose-50 text-rose-600'
@@ -372,7 +384,7 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
                 total={total}
                 page={page}
                 totalPages={totalPages}
-                onPageChange={setPage}
+                onPageChange={handlePageChange}
                 onFavoritesChange={handleFavoritesChange}
                 preferences={preferences}
                 onPreferenceChange={setPreferences}
@@ -381,6 +393,10 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
           </section>
         </div>
       </main>
+
+      <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">
+        WorkFinder &copy; 2026. Wszelkie prawa zastrzeżone.
+      </footer>
 
       <div
         ref={drawerRef}

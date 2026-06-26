@@ -20,6 +20,18 @@ export interface PreferenceState {
   preferredWorkModes: Record<string, number>;
 }
 
+const FEATURE_WEIGHTS = {
+  technology: 3.0,
+  company: 2.0,
+  workMode: 1.5,
+  city: 1.0,
+};
+
+function getTimeWeight(timestamp: number): number {
+  const ageInDays = (Date.now() - timestamp) / (1000 * 60 * 60 * 24);
+  return Math.pow(0.5, ageInDays / 30);
+}
+
 function buildDerivedState(votes: JobPreference[]): PreferenceState {
   const preferredTechnologies: Record<string, number> = {};
   const preferredCompanies: Record<string, number> = {};
@@ -27,22 +39,25 @@ function buildDerivedState(votes: JobPreference[]): PreferenceState {
   const preferredWorkModes: Record<string, number> = {};
 
   for (const v of votes) {
-    const multiplier = v.vote === "up" ? 1 : -2;
+    const baseMultiplier = v.vote === "up" ? 1 : -3;
+    const timeWeight = getTimeWeight(v.timestamp);
+    const weightedMultiplier = baseMultiplier * timeWeight;
 
     for (const tech of v.technologies) {
       preferredTechnologies[tech] =
-        (preferredTechnologies[tech] ?? 0) + multiplier;
+        (preferredTechnologies[tech] ?? 0) + weightedMultiplier * FEATURE_WEIGHTS.technology;
     }
     if (v.company) {
       preferredCompanies[v.company] =
-        (preferredCompanies[v.company] ?? 0) + multiplier;
+        (preferredCompanies[v.company] ?? 0) + weightedMultiplier * FEATURE_WEIGHTS.company;
     }
     if (v.city) {
-      preferredCities[v.city] = (preferredCities[v.city] ?? 0) + multiplier;
+      preferredCities[v.city] =
+        (preferredCities[v.city] ?? 0) + weightedMultiplier * FEATURE_WEIGHTS.city;
     }
     if (v.workMode) {
       preferredWorkModes[v.workMode] =
-        (preferredWorkModes[v.workMode] ?? 0) + multiplier;
+        (preferredWorkModes[v.workMode] ?? 0) + weightedMultiplier * FEATURE_WEIGHTS.workMode;
     }
   }
 
