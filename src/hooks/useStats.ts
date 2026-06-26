@@ -35,9 +35,9 @@ export function useStats(initialCache?: Stats) {
   const { data, error, isLoading, mutate } = useSWR<Stats>('/api/stats', fetcher, {
     fallbackData: initialCache,
     revalidateOnMount: true,
-    refreshInterval: 60000,
+    refreshInterval: 0,
     dedupingInterval: 5000,
-    revalidateOnFocus: true,
+    revalidateOnFocus: false,
     onSuccess: (d) => saveCache(d),
   });
 

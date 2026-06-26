@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { SearchBar } from '@/components/SearchBar';
 import { Filters, FilterState, loadFilters } from '@/components/Filters';
 import { AnimatedNumber } from '@/components/AnimatedNumber';
@@ -192,11 +192,7 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
     setTimeout(() => setMobileFiltersOpen(false), 200);
   }, []);
 
-  useEffect(() => {
-    const handleStorageChange = () => setFavorites(getFavorites());
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  useEffect(() => {}, []);
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
@@ -252,7 +248,7 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
     setFavorites(getFavorites());
   };
 
-  const sortedJobs = sortJobsByPreference(jobs, preferences);
+  const sortedJobs = useMemo(() => sortJobsByPreference(jobs, preferences), [jobs, preferences]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
