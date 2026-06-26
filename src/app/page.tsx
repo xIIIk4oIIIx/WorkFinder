@@ -192,8 +192,6 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
     setTimeout(() => setMobileFiltersOpen(false), 200);
   }, []);
 
-  useEffect(() => {}, []);
-
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -208,8 +206,10 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
 
   useJobsPrefetch(page, debouncedSearch, filters, showFavoritesOnly, favorites, totalPages);
 
+  const sortedJobs = useMemo(() => sortJobsByPreference(jobs, preferences), [jobs, preferences]);
+
   useEffect(() => {
-    return () => { 
+    return () => {
       // Clear interval is handled in handleSync finally block
     };
   }, []);
@@ -247,8 +247,6 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
   const handleFavoritesChange = () => {
     setFavorites(getFavorites());
   };
-
-  const sortedJobs = useMemo(() => sortJobsByPreference(jobs, preferences), [jobs, preferences]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
