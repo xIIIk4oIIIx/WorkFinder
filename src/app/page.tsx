@@ -8,6 +8,7 @@ import { JobTable } from '@/components/JobTable';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useJobs, loadJobsCache, type JobsResponse } from '@/hooks/useJobs';
+import { useJobsPrefetch } from '@/hooks/useJobsPrefetch';
 import { useStats, loadStatsCache, type Stats } from '@/hooks/useStats';
 import { type PreferenceState, getPreferences, sortJobsByPreference } from '@/lib/preferences';
 
@@ -218,6 +219,8 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
     page, debouncedSearch, filters, showFavoritesOnly, favorites
   );
   const { stats, mutate: mutateStats } = useStats(initialStats);
+
+  useJobsPrefetch(page, debouncedSearch, filters, showFavoritesOnly, favorites, totalPages);
 
   useEffect(() => {
     return () => { 
