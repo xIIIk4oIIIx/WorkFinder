@@ -6,7 +6,7 @@ import { DualRangeSlider } from './DualRangeSlider';
 const STORAGE_KEY_FILTERS = 'workfinder-filters';
 const STORAGE_KEY_SECTIONS = 'workfinder-filter-sections';
 
-function loadFilters(): FilterState {
+export function loadFilters(): FilterState {
   if (typeof window === 'undefined') return DEFAULT_FILTERS;
   try {
     const stored = localStorage.getItem(STORAGE_KEY_FILTERS);

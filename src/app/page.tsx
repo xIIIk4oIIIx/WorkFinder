@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { SearchBar } from '@/components/SearchBar';
-import { Filters, FilterState } from '@/components/Filters';
+import { Filters, FilterState, loadFilters } from '@/components/Filters';
 import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { JobTable } from '@/components/JobTable';
 import { Button } from '@/components/ui/button';
@@ -109,17 +109,7 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [filters, setFilters] = useState<FilterState>({
-    city: '',
-    technology: '',
-    workMode: [],
-    salaryMin: '',
-    salaryMax: '',
-    company: '',
-    publishedAfter: '',
-    sources: [],
-    excludeSources: [],
-  });
+  const [filters, setFilters] = useState<FilterState>(loadFilters);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(initialFavorites);
@@ -317,7 +307,7 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
           </div>
         </div>
         {syncing && (
-          <div className="absolute bottom-0 left-0 h-[3px] bg-accent z-10 transition-all duration-1000 ease-linear" style={{ width: `${Math.min((syncElapsed / 30) * 100, 95)}%`, boxShadow: '0 0 8px var(--accent)' }} />
+          <div className="absolute bottom-0 left-0 h-[3px] bg-accent z-10 transition-all duration-1000 ease-linear" style={{ width: `${Math.min((syncElapsed / 30) * 100, 95)}%`, boxShadow: '0 0 2px var(--accent)' }} />
         )}
       </header>
 
