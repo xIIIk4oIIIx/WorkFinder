@@ -331,7 +331,7 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
                 onClick={() => { setShowFavoritesOnly(!showFavoritesOnly); handlePageChange(1); }}
                 className={`flex items-center gap-2 px-3 py-2 border rounded-md text-sm font-medium transition-all duration-150 active:scale-95 ${
                   showFavoritesOnly
-                    ? 'border-rose-300 bg-rose-50 text-rose-600'
+                    ? 'border-rose-500/30 bg-rose-500/15 text-rose-400 light:border-rose-300 light:bg-rose-50 light:text-rose-600'
                     : 'border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
@@ -340,7 +340,7 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
                 </svg>
                 <span className="hidden sm:inline">Ulubione</span>
                 {favorites.size > 0 && (
-                  <span className="text-[10px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded-full font-medium">
+                    <span className="text-[10px] bg-rose-500/15 text-rose-400 light:bg-rose-100 light:text-rose-600 px-1.5 py-0.5 rounded-full font-medium">
                     {favorites.size}
                   </span>
                 )}

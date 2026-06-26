@@ -162,7 +162,7 @@ function GroupedCard({ job, onFavoritesChange, showSummary, onToggleSummary, pre
             onClick={handleFavoriteToggle}
             className={`w-8 h-8 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 ${
               isFavorite
-                ? 'border-rose-300 bg-rose-50 text-rose-500'
+                ? 'border-rose-500/30 bg-rose-500/15 text-rose-400 light:border-rose-300 light:bg-rose-50 light:text-rose-500'
                 : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
             }`}
             title={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
@@ -313,7 +313,7 @@ function FlatCard({ job, onFavoritesChange, preferences, onPreferenceChange, ind
           onClick={handleFavoriteToggle}
           className={`w-8 h-8 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
             isFavorite
-              ? 'border-rose-300 bg-rose-50 text-rose-500'
+              ? 'border-rose-500/30 bg-rose-500/15 text-rose-400 light:border-rose-300 light:bg-rose-50 light:text-rose-500'
               : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
           }`}
           title={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
@@ -406,7 +406,7 @@ function GroupedRow({ job, onFavoritesChange, showSummary, onToggleSummary, pref
                 onClick={handleFavoriteToggle}
                 className={`w-8 h-8 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
                   isFavorite
-                    ? 'border-rose-300 bg-rose-50 text-rose-500'
+                    ? 'border-rose-500/30 bg-rose-500/15 text-rose-400 light:border-rose-300 light:bg-rose-50 light:text-rose-500'
                     : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
                 title={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
@@ -571,7 +571,7 @@ function FlatRow({ job, onFavoritesChange, preferences, onPreferenceChange }: { 
               onClick={handleFavoriteToggle}
               className={`w-8 h-8 flex items-center justify-center rounded border transition-all duration-150 active:scale-90 flex-shrink-0 ${
                 isFavorite
-                  ? 'border-rose-300 bg-rose-50 text-rose-500'
+                  ? 'border-rose-500/30 bg-rose-500/15 text-rose-400 light:border-rose-300 light:bg-rose-50 light:text-rose-500'
                   : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
               title={isFavorite ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
