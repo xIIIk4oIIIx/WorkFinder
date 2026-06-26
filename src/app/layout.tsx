@@ -20,6 +20,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "WorkFinder - Job Aggregator",
   description: "Aggregate job offers from multiple sources",
+  openGraph: {
+    title: "WorkFinder - Job Aggregator",
+    description: "Aggregate job offers from multiple sources",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

@@ -156,16 +156,18 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
       panel.style.transform = 'translate3d(-100%,0,0) scale(0.95)';
       panel.style.boxShadow = 'none';
       panel.style.opacity = '0.8';
-      overlayRef.current.style.backgroundColor = 'rgba(0,0,0,0)';
+        overlayRef.current.style.backgroundColor = 'rgba(0,0,0,0)';
+        overlayRef.current.style.backdropFilter = 'blur(0px)';
       overlayRef.current.offsetHeight;
 
       requestAnimationFrame(() => {
         panel.style.transition = 'transform 225ms cubic-bezier(0.0, 0.0, 0.2, 1), box-shadow 225ms cubic-bezier(0.0, 0.0, 0.2, 1), opacity 200ms ease-out';
-        overlayRef.current!.style.transition = 'background-color 225ms cubic-bezier(0.0, 0.0, 0.2, 1)';
+        overlayRef.current!.style.transition = 'background-color 225ms cubic-bezier(0.0, 0.0, 0.2, 1), backdrop-filter 225ms cubic-bezier(0.0, 0.0, 0.2, 1)';
         panel.style.transform = 'translate3d(0,0,0) scale(1)';
         panel.style.boxShadow = '8px 0 40px rgba(0,0,0,0.25)';
         panel.style.opacity = '1';
         overlayRef.current!.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        overlayRef.current!.style.backdropFilter = 'blur(4px)';
       });
     });
   }, []);
@@ -188,11 +190,12 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
 
     requestAnimationFrame(() => {
       panel.style.transition = 'transform 195ms cubic-bezier(0.4, 0.0, 1, 1), box-shadow 195ms cubic-bezier(0.4, 0.0, 1, 1), opacity 150ms ease-in';
-      overlay.style.transition = 'background-color 195ms cubic-bezier(0.4, 0.0, 1, 1)';
+      overlay.style.transition = 'background-color 195ms cubic-bezier(0.4, 0.0, 1, 1), backdrop-filter 195ms cubic-bezier(0.4, 0.0, 1, 1)';
       panel.style.transform = 'translate3d(-100%,0,0) scale(0.95)';
       panel.style.boxShadow = 'none';
       panel.style.opacity = '0.8';
       overlay.style.backgroundColor = 'rgba(0,0,0,0)';
+      overlay.style.backdropFilter = 'blur(0px)';
     });
 
     setTimeout(() => setMobileFiltersOpen(false), 200);
@@ -260,10 +263,12 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header ref={headerRef} className="relative bg-card border-b border-border">
-        <div className="max-w-[1200px] mx-auto px-4 lg:px-8 py-3 lg:py-4">
+      <header ref={headerRef} className="relative bg-card/80 backdrop-blur-md border-b border-border">
+        <div className="max-w-[1280px] mx-auto px-4 lg:px-8 py-3 lg:py-4">
           <div className="flex items-center justify-between gap-4">
-            <h1 className="text-xl lg:text-2xl font-bold tracking-tight font-[family-name:var(--font-sans)] whitespace-nowrap">WorkFinder</h1>
+            <h1 className="text-xl lg:text-2xl font-bold tracking-tight font-[family-name:var(--font-sans)] whitespace-nowrap">
+              <span className="bg-gradient-to-r from-accent to-accent/60 bg-clip-text text-transparent">Work</span>Finder
+            </h1>
 
             <div className="flex md:hidden items-center gap-3 text-xs">
               <div className="flex items-center gap-1">
@@ -278,11 +283,11 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
             </div>
 
             <div className="hidden md:flex items-center gap-3">
-              <div className="border border-border rounded-lg px-4 py-2.5 bg-background/50 backdrop-blur-sm">
+              <div className="stats-pop-in border border-border rounded-lg px-4 py-2.5 bg-background/50 backdrop-blur-sm" style={{ animationDelay: '0ms' }}>
                 <div suppressHydrationWarning className="text-xl font-semibold tracking-tight font-[family-name:var(--font-sans)]"><AnimatedNumber value={total} /></div>
                 <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Łącznie</div>
               </div>
-              <div className="border border-accent/20 rounded-lg px-4 py-2.5 bg-accent/5">
+              <div className="stats-pop-in border border-accent/20 rounded-lg px-4 py-2.5 bg-accent/5" style={{ animationDelay: '100ms' }}>
                 <div suppressHydrationWarning className="text-xl font-semibold tracking-tight font-[family-name:var(--font-sans)] text-accent">+<AnimatedNumber value={stats?.todayNew ?? 0} /></div>
                 <div className="text-[10px] text-accent/70 font-medium uppercase tracking-wider">Dziś</div>
               </div>
@@ -291,7 +296,7 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
                 <span className="font-medium">{stats?.bySource?.length ?? 0}</span> źródeł
               </div>
               <div className="text-xs text-muted-foreground">
-                Ostatnie odświeżenie: <span className="font-[family-name:var(--font-mono)] font-medium">{stats?.lastSync ? new Date(stats.lastSync).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+                Odświeżono: <span className="font-[family-name:var(--font-mono)] font-medium">{stats?.lastSync ? new Date(stats.lastSync).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
               </div>
             </div>
 
@@ -309,11 +314,14 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
           </div>
         </div>
         {syncing && (
-          <div className="absolute bottom-0 left-0 h-[3px] bg-accent z-10 transition-all duration-1000 ease-linear" style={{ width: `${Math.min((syncElapsed / 30) * 100, 95)}%` }} />
+          <div className="absolute bottom-0 left-0 h-[3px] bg-accent z-10 transition-all duration-1000 ease-linear" style={{ width: `${Math.min((syncElapsed / 30) * 100, 95)}%`, boxShadow: '0 0 8px var(--accent)' }} />
         )}
       </header>
 
-      <main id="main-content" className="max-w-[1200px] mx-auto px-4 lg:px-8 py-6 lg:py-8">
+      <main id="main-content" className="max-w-[1280px] mx-auto px-4 lg:px-8 py-6 lg:py-8">
+        <div className="mb-6">
+          <p className="text-muted-foreground text-sm">Przeglądaj oferty pracy w jednym miejscu</p>
+        </div>
         <div className="flex gap-8">
           <aside className="w-64 flex-shrink-0 hidden lg:block sticky top-6 self-start">
             <Filters onFilter={handleFilter} />
@@ -394,8 +402,21 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
         </div>
       </main>
 
-      <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">
-        WorkFinder &copy; 2026. Wszelkie prawa zastrzeżone.
+      <footer className="border-t border-border mt-8">
+        <div className="max-w-[1280px] mx-auto px-4 lg:px-8 py-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">WorkFinder</span>
+              <span>&copy; 2026</span>
+            </div>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <span>Źródła:</span>
+              {['NoFluffJobs', 'BulldogJob', 'OLX', 'JustJoin', 'RocketJobs', 'Jooble', 'Pracuj.pl'].map((s) => (
+                <span key={s} className="footer-source hover:text-foreground cursor-default">{s}</span>
+              ))}
+            </div>
+          </div>
+        </div>
       </footer>
 
       <div
@@ -408,8 +429,9 @@ function HomeContent({ initialStats, initialFavorites }: HomeContentProps) {
           className="absolute inset-0"
           style={{
             backgroundColor: 'rgba(0,0,0,0)',
-            transition: 'background-color 180ms cubic-bezier(0.4, 0, 0.2, 1)',
-            willChange: 'background-color',
+            backdropFilter: 'blur(0px)',
+            transition: 'background-color 180ms cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 180ms cubic-bezier(0.4, 0, 0.2, 1)',
+            willChange: 'background-color, backdrop-filter',
           }}
           ref={overlayRef}
           onClick={closeDrawer}

@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 export default function Error({
   error,
   reset,
@@ -21,12 +23,20 @@ export default function Error({
         <p className="text-sm text-muted-foreground mb-4">
           {error.message || 'Nie udało się załadować zawartości'}
         </p>
-        <button
-          onClick={reset}
-          className="px-4 py-2 bg-accent text-accent-foreground rounded-lg text-sm font-medium hover:bg-accent/90 transition-colors"
-        >
-          Spróbuj ponownie
-        </button>
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={reset}
+            className="px-4 py-2 bg-accent text-accent-foreground rounded-lg text-sm font-medium hover:bg-accent/90 hover:scale-[1.02] transition-all duration-200"
+          >
+            Spróbuj ponownie
+          </button>
+          <Link
+            href="/"
+            className="px-4 py-2 border border-border rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground hover:border-muted-foreground/30 transition-all duration-200"
+          >
+            Strona główna
+          </Link>
+        </div>
       </div>
     </div>
   );

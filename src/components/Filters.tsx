@@ -54,7 +54,7 @@ function FilterSection({ title, sectionKey, defaultOpen = true, sections, onTogg
           <path d="m6 9 6 6 6-6" />
         </svg>
       </button>
-      <div suppressHydrationWarning className={open ? '' : 'hidden'}>
+      <div suppressHydrationWarning style={{ maxHeight: open ? '500px' : '0', opacity: open ? 1 : 0, overflow: open ? 'visible' : 'hidden', transition: 'max-height 250ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms ease' }}>
         {children}
       </div>
     </div>
@@ -185,7 +185,14 @@ export function Filters({ onFilter }: FiltersProps) {
   return (
     <div className="bg-muted border border-border rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold tracking-tight">Filtry</h3>
+        <h3 className="text-sm font-semibold tracking-tight flex items-center gap-2">
+          Filtry
+          {(filters.workMode.length > 0 || filters.sources.length > 0 || filters.excludeSources.length > 0 || filters.city || filters.company || filters.salaryMin || filters.salaryMax) && (
+            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full bg-accent text-accent-foreground" style={{ animation: 'badge-pop 300ms cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+              {filters.workMode.length + filters.sources.length + filters.excludeSources.length + (filters.city ? 1 : 0) + (filters.company ? 1 : 0) + (filters.salaryMin ? 1 : 0) + (filters.salaryMax ? 1 : 0)}
+            </span>
+          )}
+        </h3>
         <button
           onClick={handleClear}
           className="text-[11px] font-[family-name:var(--font-mono)] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-all duration-150 active:scale-95"

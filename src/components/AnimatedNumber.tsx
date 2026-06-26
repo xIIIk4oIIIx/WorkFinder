@@ -36,5 +36,5 @@ export function AnimatedNumber({ value, duration = 800 }: { value: number; durat
     return () => cancelAnimationFrame(rafRef.current);
   }, [value, duration]);
 
-  return <>{display.toLocaleString('pl-PL')}</>;
+  return <span style={{ fontVariantNumeric: 'tabular-nums' }}>{display.toLocaleString('pl-PL')}</span>;
 }

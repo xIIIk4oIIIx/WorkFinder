@@ -205,11 +205,11 @@ export function AiSummaryCard({ jobTitle, company, description, technologies, so
             </button>
             <button className="w-8 h-8 flex items-center justify-center rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" onClick={handleCopy} title={copied ? 'Skopiowano!' : 'Kopiuj'}>
               {copied ? (
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="w-4 h-4 ai-copy-icon ai-copy-icon-enter" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 6 9 17l-5-5"/>
                 </svg>
               ) : (
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="w-4 h-4 ai-copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
                   <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
                 </svg>
@@ -236,7 +236,11 @@ export function AiSummaryCard({ jobTitle, company, description, technologies, so
         {loading && (
           <div className="ai-loading">
             <div className="ai-loading-header">
-              <div className="ai-loading-spinner" />
+              <div className="ai-loading-dots">
+                <div className="ai-loading-dot" />
+                <div className="ai-loading-dot" />
+                <div className="ai-loading-dot" />
+              </div>
               <div className="ai-loading-text">{loadMessage || 'Pracuję...'}</div>
             </div>
             <div className="ai-loading-step">Krok {loadStep}/3</div>
@@ -253,7 +257,7 @@ export function AiSummaryCard({ jobTitle, company, description, technologies, so
         )}
 
         {sections.map((section, i) => (
-          <div key={i} className="ai-section">
+          <div key={i} className="ai-section" style={{ animationDelay: `${i * 80}ms` }}>
             <div className="ai-section-header">
               <div className={`ai-section-icon ${section.icon}`}>
                 <SectionIcon type={section.icon} />

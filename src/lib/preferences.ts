@@ -1,11 +1,9 @@
-import type { Job } from "@/types/job";
-
 const STORAGE_KEY = "workfinder-preferences";
 
 export interface JobPreference {
   jobId: string;
   vote: "up" | "down";
-  timestamp: number;
+  timestamp?: number;
   technologies: string[];
   company: string;
   city: string;
@@ -40,7 +38,7 @@ function buildDerivedState(votes: JobPreference[]): PreferenceState {
 
   for (const v of votes) {
     const baseMultiplier = v.vote === "up" ? 1 : -3;
-    const timeWeight = getTimeWeight(v.timestamp);
+    const timeWeight = getTimeWeight(v.timestamp ?? Date.now());
     const weightedMultiplier = baseMultiplier * timeWeight;
 
     for (const tech of v.technologies) {
@@ -109,7 +107,7 @@ export function recordVote(
   return buildDerivedState(votes);
 }
 
-export function getJobScore(job: Job, state: PreferenceState): number {
+export function getJobScore(job: { technologies: string[]; company: string; city: string | null; workMode: string | null }, state: PreferenceState): number {
   let score = 0;
 
   for (const tech of job.technologies) {
@@ -133,7 +131,7 @@ export function getJobScore(job: Job, state: PreferenceState): number {
   return score;
 }
 
-export function sortJobsByPreference<T extends Job>(
+export function sortJobsByPreference<T extends { id: string; technologies: string[]; company: string; city: string | null; workMode: string | null }>(
   jobs: T[],
   state: PreferenceState
 ): T[] {
